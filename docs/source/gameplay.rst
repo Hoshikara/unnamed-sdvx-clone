@@ -28,6 +28,7 @@ The following fields are available under the ``gameplay`` table:
     bool[2] laserActive // Array indicating if the laser cursor is on a laser, in order: LR
     ScoreReplay[] scoreReplays //Array of previous scores for the current song
     CritLine critLine // info about crit line and everything attached to it
+    HitWindow hitWindow // table of all hit windows, in milliseconds
     
 Example:    
 
@@ -93,6 +94,18 @@ A ``Line`` contains the following fields:
     float x2 // end x coordinate
     float y2 // end y coordinate
 
+HitWindow
+*********
+A ``HitWindow`` contains the following fields:
+
+.. code-block:: c
+
+    int type // the current hit judgement type, 1 = normal, 2 = hard
+    int perfect // the current hit window for perfects
+    int good // the current hit window for goods
+    int hold // the current hit window for holds
+    int miss // the current hit window for misses
+
 Calls made to lua
 *****************
 These are functions the game calls in the gameplay lua script so they need to be defined in there. The reason for having these is mostly for updating and starting animations.
@@ -127,7 +140,7 @@ Can be used for a number of things, such as starting custom hit animations or mo
 Idle and Miss are special cases that do not have any delta (delta always 0). Idle is triggered when the player
 hits the button when there is no note object in range on that lane.
 
-laser_slam_hit(slamLength, startPos, endPost, index)
+laser_slam_hit(slamLength, startPos, endPos, index)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For animating laser slam hits.
 ``slamLength`` is the length between slams from -2.0 through 2.0. The sign on this value indicates the slam direction.

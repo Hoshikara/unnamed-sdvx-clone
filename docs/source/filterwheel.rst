@@ -7,7 +7,7 @@ Contains ``filters`` which has the following fields:
 .. code-block:: c#
 
     string[] level //Contains all level filters
-    string[] foler //Contains all folder filters
+    string[] folder //Contains all folder filters
 
 Calls made to lua
 *****************
