@@ -486,8 +486,8 @@ public:
 		m_displayIndex = 0;
 		m_selfDisplayIndex = 0;
 		Scoring& scoring = game->GetScoring();
-		m_autoplay = scoring.autoplay;
-		m_autoButtons = scoring.autoplayButtons;
+		m_autoplay = scoring.autoplayInfo.autoplay;
+		m_autoButtons = scoring.autoplayInfo.autoplayButtons;
 
 		if (ChartIndex* chart = game->GetChartIndex())
 		{

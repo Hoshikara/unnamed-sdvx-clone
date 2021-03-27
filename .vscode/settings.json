@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.lua": "lua",
+    "vector": "cpp"
+  }
+}

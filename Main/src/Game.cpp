@@ -6,7 +6,6 @@
 #include <random>
 #include <unordered_set>
 #include <Beatmap/BeatmapPlayback.hpp>
-#include <Beatmap/MapDatabase.hpp>
 #include <Shared/Profiling.hpp>
 #include <Audio/Audio.hpp>
 
@@ -28,8 +27,6 @@
 
 #include "PracticeModeSettingsDialog.hpp"
 #include "Audio/OffsetComputer.hpp"
-
-#include <SDL2/SDL.h>
 
 // Try load map helper
 Ref<Beatmap> TryLoadMap(const String& path)
@@ -101,6 +98,7 @@ private:
 	SpeedMods m_speedMod;
 	float m_modSpeed = 400;
 
+    bool m_delayedHitEffects;
 
 	// Texture of the map jacket image, if available
 	Image m_jacketImage;
@@ -210,12 +208,11 @@ public:
 
 	~Game_Impl()
 	{
-		if(m_track)
-			delete m_track;
-		if(m_background)
-			delete m_background;
-		if (m_foreground)
-			delete m_foreground;
+        if (m_track)
+            g_input.OnButtonReleased.Remove(m_track, &Track::OnButtonReleased);
+        delete m_track;
+		delete m_background;
+		delete m_foreground;
 		if (m_lua)
 		{
 			g_application->DisposeLua(m_lua);
@@ -223,8 +220,7 @@ public:
 			if (m_multiplayer != nullptr)
 				m_multiplayer->GetTCP().ClearState(m_lua);
 		}
-		if (m_fxSamples)
-			delete[] m_fxSamples;
+		delete[] m_fxSamples;
 		
 		// Save hispeed
 		if (m_saveSpeed)
@@ -378,6 +374,8 @@ public:
 				}
 			}
 
+        m_delayedHitEffects = g_gameConfig.GetBool(GameConfigKeys::DelayedHitEffects);
+
 		// Initialize input/scoring
 		if(!InitGameplay())
 			return false;
@@ -477,6 +475,14 @@ public:
 		m_track->distantButtonScale = g_gameConfig.GetFloat(GameConfigKeys::DistantButtonScale);
 		m_showCover = g_gameConfig.GetBool(GameConfigKeys::ShowCover);
 
+        g_input.OnButtonReleased.Add(m_track, &Track::OnButtonReleased);
+        if (m_delayedHitEffects)
+        {
+            m_scoring.OnHoldEnter.Add(m_track, &Track::OnHoldEnter);
+            if (m_scoring.autoplayInfo.IsAutoplayButtons())
+                m_scoring.OnHoldLeave.Add(m_track, &Track::OnButtonReleased);
+        }
+
 		#ifdef EMBEDDED
 		basicParticleTexture = Ref<TextureRes>();
 		particleMaterial = Ref<MaterialRes>();
@@ -524,6 +530,8 @@ public:
 		m_scoring.SetHitWindow(GetHitWindow());
 
 		g_input.OnButtonPressed.Add(this, &Game_Impl::m_OnButtonPressed);
+
+        m_track->hitEffectAutoplay = m_scoring.autoplayInfo.IsAutoplayButtons();
 
 		if (GetPlaybackOptions().random)
 		{
@@ -820,9 +828,15 @@ public:
 
 		// 8 beats (2 measures) in view at 1x hi-speed
 		if (m_speedMod == SpeedMods::CMod)
-			m_track->SetViewRange(1.0 / m_playback.cModSpeed);
+        {
+            m_track->SetViewRange(1.0 / m_playback.cModSpeed);
+            m_track->scrollSpeed = m_playback.cModSpeed;
+        }
 		else
-			m_track->SetViewRange(8.0f / (m_hispeed)); 
+		{
+            m_track->SetViewRange(8.0f / m_hispeed);
+            m_track->scrollSpeed = m_hispeed * m_playback.GetCurrentTimingPoint().GetBPM();
+        }
 
 		// Get render state from the camera
 		// Get roll when there's no laser slam roll and roll ignore being applied
@@ -871,10 +885,9 @@ public:
 			{
 				if (a->type == ObjectType::Single)
 					return (((ButtonObjectState*)a)->index < 4) ? 1 : 2;
-				else if (a->type == ObjectType::Hold)
+				if (a->type == ObjectType::Hold)
 					return (((ButtonObjectState*)a)->index < 4) ? 3 : 4;
-				else
-					return 0;
+				return 0;
 			};
 			uint32 renderPriorityA = ObjectRenderPriorty(a);
 			uint32 renderPriorityB = ObjectRenderPriorty(b);
@@ -892,6 +905,9 @@ public:
 			}
 		}
 
+        RenderQueue fxHoldObjectsRq(g_gl, rs);
+		RenderQueue hitObjectsTrackCoverRq(g_gl, rs);
+
 		/// TODO: Performance impact analysis.
 		m_track->DrawLaserBase(renderQueue, m_playback, m_currentObjectSet);
 
@@ -901,15 +917,22 @@ public:
 		for(auto& object : m_currentObjectSet)
 		{
 			if(m_hiddenObjects.find(object) == m_hiddenObjects.end())
-				m_track->DrawObjectState(renderQueue, m_playback, object, m_scoring.IsObjectHeld(object), chipFXTimes);
+			{
+				MultiObjectState* mobj = (MultiObjectState*)object;
+				if (object->type == ObjectType::Hold && (mobj->button.index == 4 || mobj->button.index == 5))
+					m_track->DrawObjectState(fxHoldObjectsRq, m_playback, object, m_scoring.IsObjectHeld(object), chipFXTimes);
+				else
+					m_track->DrawObjectState(hitObjectsTrackCoverRq, m_playback, object, m_scoring.IsObjectHeld(object), chipFXTimes);
+			}
 		}
 		if(m_showCover)
-			m_track->DrawTrackCover(renderQueue);
+			m_track->DrawTrackCover(hitObjectsTrackCoverRq);
 
 		// Use new camera for scoring overlay
 		//	this is because otherwise some of the scoring elements would get clipped to
 		//	the track's near and far planes
 		rs = m_camera.CreateRenderState(false);
+        RenderQueue hitEffectsRq(g_gl, rs);
 		RenderQueue scoringRq(g_gl, rs);
 
 		// Copy over laser position and extend info
@@ -928,12 +951,16 @@ public:
 			m_track->laserPositions[i] = m_scoring.laserPositions[i];
 			m_track->laserPointerOpacity[i] = (1.0f - Math::Clamp<float>(m_scoring.timeSinceLaserUsed[i] / 0.5f - 1.0f, 0, 1));
 		}
+        m_track->DrawHitEffects(hitEffectsRq);
 		m_track->DrawOverlays(scoringRq);
 		float comboZoom = Math::Max(0.0f, (1.0f - (m_comboAnimation.SecondsAsFloat() / 0.2f)) * 0.5f);
 		//m_track->DrawCombo(scoringRq, m_scoring.currentComboCounter, m_comboColors[m_scoring.comboState], 1.0f + comboZoom);
 
 		// Render queues
 		renderQueue.Process();
+        fxHoldObjectsRq.Process();
+		hitEffectsRq.Process();
+		hitObjectsTrackCoverRq.Process();
 		scoringRq.Process();
 		glFlush();
 
@@ -1286,7 +1313,7 @@ public:
 
 		if(g_application->GetAppCommandLine().Contains("-autobuttons"))
 		{
-			m_scoring.autoplayButtons = true;
+			m_scoring.autoplayInfo.autoplayButtons = true;
 		}
 
 		return true;
@@ -1404,7 +1431,7 @@ public:
 		{
 			EndCurrentRun();
 		}
-		else if (!m_scoring.autoplay && !m_isPracticeSetup && m_playOptions.failCondition && m_playOptions.failCondition->IsFailed(m_scoring))
+		else if (!m_scoring.autoplayInfo.autoplay && !m_isPracticeSetup && m_playOptions.failCondition && m_playOptions.failCondition->IsFailed(m_scoring))
 		{
 			Gauge* gauge = m_scoring.GetTopGauge();
 
@@ -1434,7 +1461,7 @@ public:
 				ChartIndex* chart = m_db->GetRandomChart();
 				game = Game::Create(chart, std::move(m_playOptions));
 			}
-			game->GetScoring().autoplay = true;
+			game->GetScoring().autoplayInfo.autoplay = true;
 			game->SetDemoMode(true);
 			game->SetSongDB(m_db);
 
@@ -1630,7 +1657,7 @@ public:
 				ChartIndex* diff = m_db->GetRandomChart();
 				game = Game::Create(diff, m_playOptions.playbackOptions);
 			}
-			game->GetScoring().autoplay = true;
+			game->GetScoring().autoplayInfo.autoplay = true;
 			game->SetDemoMode(true);
 			game->SetSongDB(m_db);
 
@@ -1805,7 +1832,7 @@ public:
 			{
 				textPos.y += RenderText("Practice setup", textPos, Color::Magenta).y;
 			}
-			else if(m_scoring.autoplay)
+			else if(m_scoring.autoplayInfo.autoplay)
 			{
 				textPos.y += RenderText("Autoplay enabled", textPos, Color::Magenta).y;
 			}
@@ -1918,12 +1945,10 @@ public:
 		ButtonObjectState* st = (ButtonObjectState*)hitObject;
 		uint32 buttonIdx = (uint32)button;
 		Color c = m_track->hitColors[(size_t)rating];
+        bool skipEffect = m_scoring.HoldObjectAvailable((uint32) button, false) && !m_delayedHitEffects;
 
-		// Show crit color on idle if a hold not is hit
-		if (rating == ScoreHitRating::Idle && m_scoring.IsObjectHeld((uint32)button))
-			c = m_track->hitColors[(size_t)ScoreHitRating::Perfect];
-
-		m_track->AddEffect(new ButtonHitEffect(buttonIdx, c));
+		if (!skipEffect)
+            m_track->AddHitEffect(buttonIdx, c, st && st->type == ObjectType::Hold);
 
 		if (st != nullptr && st->hasSample)
 		{
@@ -1934,7 +1959,7 @@ public:
 			}
 		}
 
-		if(rating != ScoreHitRating::Idle)
+		if (rating != ScoreHitRating::Idle)
 		{
 			// Floating text effect
 			m_track->AddEffect(new ButtonHitRatingEffect(buttonIdx, rating));
@@ -1982,6 +2007,7 @@ public:
 		}
 		lua_settop(m_lua, 0);
 	}
+
 	void OnButtonMiss(Input::Button button, bool hitEffect, ObjectState* object)
 	{
 		uint32 buttonIdx = (uint32)button;
@@ -1990,7 +2016,7 @@ public:
 			ButtonObjectState* st = (ButtonObjectState*)object;
 			//m_hiddenObjects.insert(object);
 			Color c = m_track->hitColors[0];
-			m_track->AddEffect(new ButtonHitEffect(buttonIdx, c));
+			m_track->AddHitEffect(buttonIdx, c);
 		}
 		m_track->AddEffect(new ButtonHitRatingEffect(buttonIdx, ScoreHitRating::Miss));
 
@@ -2008,6 +2034,7 @@ public:
 		}
 		lua_settop(m_lua, 0);
 	}
+
 	void OnComboChanged(uint32 newCombo)
 	{
 		m_comboAnimation.Restart();
@@ -2018,6 +2045,7 @@ public:
 			Logf("Lua error on calling update_combo: %s", Logger::Severity::Error, lua_tostring(m_lua, -1));
 		}
 	}
+
 	void OnScoreChanged()
 	{
 		lua_getglobal(m_lua, "update_score");
@@ -2034,8 +2062,9 @@ public:
 	}
 
 	// These functions control if FX button DSP's are muted or not
-	void OnObjectHold(Input::Button, ObjectState* object)
+	void OnObjectHold(Input::Button buttonCode, ObjectState* object)
 	{
+        auto buttonIdx = (int)buttonCode;
 		if(object->type == ObjectType::Hold)
 		{
 			HoldObjectState* hold = (HoldObjectState*)object;
@@ -2045,6 +2074,7 @@ public:
 			}
 		}
 	}
+
 	void OnObjectReleased(Input::Button, ObjectState* object)
 	{
 		if(object->type == ObjectType::Hold)
@@ -2431,7 +2461,7 @@ public:
 
 		m_isPracticeSetupNavEnabled = g_gameConfig.GetBool(GameConfigKeys::PracticeSetupNavEnabled);
 
-		m_scoring.autoplay = true;
+		m_scoring.autoplayInfo.autoplay = true;
 
 		m_practiceSetupRange = m_playOptions.range;
 		m_playOptions.range = { 0, 0 };
@@ -2550,7 +2580,7 @@ public:
 		assert(m_isPracticeMode);
 
 		m_isPracticeSetup = true;
-		m_scoring.autoplay = true;
+		m_scoring.autoplayInfo.autoplay = true;
 
 		m_playOptions.range = { 0, 0 };
 		m_playOnDialogClose = true;
@@ -2586,7 +2616,7 @@ public:
 		assert(m_isPracticeMode && m_isPracticeSetup);
 
 		m_isPracticeSetup = false;
-		m_scoring.autoplay = false;
+		m_scoring.autoplayInfo.autoplay = false;
 
 		m_paused = false;
 		m_triggerPause = false;
@@ -2709,8 +2739,7 @@ public:
 	}
 	virtual bool IsStorableScore() override
 	{
-		if (m_scoring.autoplay) return false;
-		if (m_scoring.autoplayButtons) return false;
+		if (m_scoring.autoplayInfo.IsAutoplayButtons()) return false;
 		if (m_isPracticeSetup) return false;
 
 		// GetPlaybackSpeed() returns 0 on end of a song
@@ -2784,7 +2813,7 @@ public:
 
 		//set autoplay here as it's not set during the creation of the gameplay
 		lua_pushstring(L, "autoplay");
-		lua_pushboolean(L, m_scoring.autoplay);
+		lua_pushboolean(L, m_scoring.autoplayInfo.autoplay);
 		lua_settable(L, -3);
 
 		if (m_isPracticeMode)
@@ -3062,7 +3091,7 @@ public:
 		}
 
 		lua_pushstring(L, "autoplay");
-		lua_pushboolean(L, m_scoring.autoplay);
+		lua_pushboolean(L, m_scoring.autoplayInfo.autoplay);
 		lua_settable(L, -3);
 
 		if (m_isPracticeMode)
