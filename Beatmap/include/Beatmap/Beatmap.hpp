@@ -44,6 +44,9 @@ struct BeatmapSettings
 	float slamVolume = 1.0f;
 	float laserEffectMix = 1.0f;
 	float musicVolume = 1.0f;
+
+    float speedBpm = -1.0f;
+    
 	EffectType laserEffectType = EffectType::PeakingFilter;
 };
 

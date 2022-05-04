@@ -313,28 +313,34 @@ public:
 			MapTime largestMT = -1;
 			double useBPM = -1;
 			double lastBPM = -1;
-			for (TimingPoint* tp : timingPoints)
+			if (mapSettings.speedBpm > 0.0f)
 			{
-				double thisBPM = tp->GetBPM();
-				if (!bpmDurations.count(lastBPM))
+				useBPM = mapSettings.speedBpm;
+			}
+			else 
+			{
+				for (TimingPoint* tp : timingPoints)
 				{
-					bpmDurations[lastBPM] = 0;
+					double thisBPM = tp->GetBPM();
+					if (!bpmDurations.count(lastBPM))
+					{
+						bpmDurations[lastBPM] = 0;
+					}
+					MapTime timeSinceLastTP = tp->time - lastMT;
+					bpmDurations[lastBPM] += timeSinceLastTP;
+					if (bpmDurations[lastBPM] > largestMT)
+					{
+						useBPM = lastBPM;
+						largestMT = bpmDurations[lastBPM];
+					}
+					lastMT = tp->time;
+					lastBPM = thisBPM;
 				}
-				MapTime timeSinceLastTP = tp->time - lastMT;
-				bpmDurations[lastBPM] += timeSinceLastTP;
+				bpmDurations[lastBPM] += m_endTime - lastMT;
 				if (bpmDurations[lastBPM] > largestMT)
 				{
 					useBPM = lastBPM;
-					largestMT = bpmDurations[lastBPM];
 				}
-				lastMT = tp->time;
-				lastBPM = thisBPM;
-			}
-			bpmDurations[lastBPM] += m_endTime - lastMT;
-
-			if (bpmDurations[lastBPM] > largestMT)
-			{
-				useBPM = lastBPM;
 			}
 
 			m_hispeed = m_modSpeed / useBPM; 
