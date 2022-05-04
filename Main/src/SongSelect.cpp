@@ -1105,7 +1105,7 @@ public:
 				return;
 			}
 
-			game->GetScoring().autoplayInfo.utoplay = true;
+			game->GetScoring().autoplayInfo.autoplay = true;
 
 			if(m_settDiag.IsActive()) m_settDiag.Close();
 			m_suspended = true;

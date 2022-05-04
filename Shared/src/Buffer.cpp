@@ -1,10 +1,6 @@
 #include "stdafx.h"
 #include "Buffer.hpp"
 
-Buffer::Buffer(size_t initialSize)
-{
-	resize(initialSize);
-}
 Buffer::Buffer(const char* string)
 {
 	uint32 l = (uint32)strlen(string);

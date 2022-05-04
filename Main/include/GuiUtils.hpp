@@ -27,6 +27,10 @@ protected:
 	bool m_backgroundFrame = true;
 	Texture m_fromTexture;
 	Mesh m_bgMesh;
+
+private:
+	void InitNuklearFontAtlas();
+	void InitNuklearFontAtlasFallback(struct nk_font_atlas* atlas, float fontSize);
 };
 
 class BasicWindow : public BasicNuklearGui

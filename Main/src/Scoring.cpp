@@ -870,7 +870,7 @@ ObjectState* Scoring::m_ConsumeTick(uint32 buttonCode)
 		{
 			HoldObjectState* hos = (HoldObjectState*)hitObject;
 			hos = hos->GetRoot();
-			if (hos->time - hitWindow.hold <= currentTime)
+			if (hos->time - currentTime <= hitWindow.hold)
 				m_SetHoldObject(hitObject, buttonCode);
 			return nullptr;
 		}

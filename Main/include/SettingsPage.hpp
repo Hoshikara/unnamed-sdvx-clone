@@ -32,7 +32,7 @@ protected:
 		virtual void SaveConfig(const String& value) {}
 
 	private:
-
+        bool m_loaded = false;
 		std::array<char, BUFFER_SIZE> m_buffer;
 		int m_len = 0;
 	};
@@ -105,20 +105,18 @@ protected:
 public:
 	void Open()
 	{
-		if (!m_opened)
-		{
-			Load();
-			m_opened = true;
-		}
+		if (m_opened) return;
+
+		Load();
+		m_opened = true;
 	}
 
 	void Close()
 	{
-		if (m_opened)
-		{
-			Save();
-			m_opened = false;
-		}
+		if (!m_opened) return;
+
+		Save();
+		m_opened = false;
 	}
 
 	void Render(const struct nk_rect& rect);
@@ -129,11 +127,20 @@ protected:
 	nk_context* m_nctx = nullptr;
 	String m_name;
 
+    inline void UpdateLayoutMaxY() { UpdateLayoutMaxY(0.0f); }
+
+	/// Marks max-y needs to be shown
+	inline void UpdateLayoutMaxY(int offset) { UpdateLayoutMaxY(static_cast<float>(offset)); }
+	inline void UpdateLayoutMaxY(float offset) { m_layout_max_y = Math::Max(m_layout_max_y, m_nctx->current->layout->at_y + m_lineHeight + offset); };
+
 	int m_lineHeight = 30;
 	struct nk_vec2 m_comboBoxSize = nk_vec2(1050, 250);
 
 	float m_pageInnerWidth = 0.0f;
 	bool m_opened = false;
+
+private:
+	float m_layout_max_y = 0;
 };
 
 class SettingsPageCollection : public BasicNuklearGui

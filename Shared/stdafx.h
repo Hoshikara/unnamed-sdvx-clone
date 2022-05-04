@@ -12,3 +12,6 @@
 #endif
 
 #include "Shared/Types.hpp"
+
+#include <vector>
+#include <map> 

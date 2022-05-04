@@ -73,12 +73,6 @@ public:
 	GaugeHard(float gainRate = 12.f / 21.f, float missDrainPercent = 0.09f) :
 		GaugeNormal(gainRate, missDrainPercent) {};
 	~GaugeHard() = default;
-	bool Init(MapTotals mapTotals, uint16 total, MapTime length);
-	void LongHit();
-	void CritHit();
-	void NearHit();
-	void LongMiss();
-	void ShortMiss();
     bool Init(MapTotals mapTotals, uint16 total, MapTime length) override;
 	void LongMiss() override;
 	void ShortMiss() override;

@@ -90,6 +90,7 @@ private:
 
 	// Map object approach speed, scaled by BPM
 	float m_hispeed = 1.0f;
+    float m_hispeedAdvance = 0.f;
 
 	// Current lane toggle status
 	bool m_hideLane = false;
@@ -475,13 +476,12 @@ public:
 		m_track->distantButtonScale = g_gameConfig.GetFloat(GameConfigKeys::DistantButtonScale);
 		m_showCover = g_gameConfig.GetBool(GameConfigKeys::ShowCover);
 
-        g_input.OnButtonReleased.Add(m_track, &Track::OnButtonReleased);
         if (m_delayedHitEffects)
-        {
-            m_scoring.OnHoldEnter.Add(m_track, &Track::OnHoldEnter);
-            if (m_scoring.autoplayInfo.IsAutoplayButtons())
-                m_scoring.OnHoldLeave.Add(m_track, &Track::OnButtonReleased);
-        }
+		{
+			m_scoring.OnHoldEnter.Add(m_track, &Track::OnHoldEnter);
+			if (m_scoring.autoplayInfo.IsAutoplayButtons())
+				m_scoring.OnHoldLeave.Add(m_track, &Track::OnButtonReleased);
+		}
 
 		#ifdef EMBEDDED
 		basicParticleTexture = Ref<TextureRes>();
@@ -782,22 +782,21 @@ public:
 		{
 			for (int i = 0; i < 2; i++)
 			{
-				float change = g_input.GetInputLaserDir(i) / 3.0f;
-				m_hispeed += change;
-				m_hispeed = Math::Clamp(m_hispeed, 0.1f, 16.f);
-				if ((m_speedMod != SpeedMods::XMod) && change != 0.0f)
+				m_hispeedAdvance += g_input.GetInputLaserDir(i) / 3.0f;
+				int hispeedSteps = static_cast<int>(truncf(m_hispeedAdvance * 10.0f));
+				m_hispeedAdvance -= 0.1f * hispeedSteps;
+				if (hispeedSteps != 0)
 				{
+                    m_hispeed = static_cast<float>(static_cast<int>(m_hispeed * 10.0f) + hispeedSteps) / 10.0f;
+					m_hispeed = Math::Clamp(m_hispeed, 0.1f, 16.f);
+
 					if (m_saveSpeed)
 					{
 						g_gameConfig.Set(GameConfigKeys::ModSpeed, m_hispeed * (float)m_currentTiming->GetBPM());
 					}
 					m_modSpeed = m_hispeed * (float)m_currentTiming->GetBPM();
 					// Have to check in here so we can update m_playback
-					CheckChallengeHispeed(m_currentTiming->GetBPM());
 					m_playback.cModSpeed = m_modSpeed;
-				}
-				else
-				{
 					CheckChallengeHispeed(m_currentTiming->GetBPM());
 				}
 			}
@@ -2582,6 +2581,9 @@ public:
 		m_isPracticeSetup = true;
 		m_scoring.autoplayInfo.autoplay = true;
 
+        m_track->hitEffectAutoplay = true;
+		m_scoring.OnHoldLeave.Add(m_track, &Track::OnButtonReleased);
+
 		m_playOptions.range = { 0, 0 };
 		m_playOnDialogClose = true;
 
@@ -2617,6 +2619,9 @@ public:
 
 		m_isPracticeSetup = false;
 		m_scoring.autoplayInfo.autoplay = false;
+
+        m_track->hitEffectAutoplay = false;
+		m_scoring.OnHoldLeave.Remove(m_track, &Track::OnButtonReleased);
 
 		m_paused = false;
 		m_triggerPause = false;
