@@ -44,9 +44,9 @@ private:
 	// Delayed samples
 	static const uint32 order = 2;
 	// FIR Delay buffers
-	float zb[2][order];
+	float zb[2][order]{};
 	// IIR Delay buffers
-	float za[2][order];
+	float za[2][order]{};
 };
 
 // Combinded Low/High-pass and Peaking filter
@@ -117,7 +117,7 @@ private:
 	uint32 m_length = 0;
 	uint32 m_fadeIn = 0;  // Fade In mark
 	uint32 m_fadeOut = 0; // Fade Out mark
-	uint32 m_halfway;	  // Halfway mark
+	uint32 m_halfway{};	  // Halfway mark
 	uint32 m_currentSample = 0;
 };
 
@@ -177,7 +177,7 @@ public:
 	virtual const char *GetName() const { return "WobbleDSP"; }
 
 private:
-	uint32 m_length;
+	uint32 m_length{};
 	uint32 m_currentSample = 0;
 };
 
@@ -269,7 +269,7 @@ public:
 	// Volume multiplier for the sidechaing
 	float amount = 0.25f;
 
-	Interpolation::CubicBezier curve;
+	Interpolation::CubicBezier curve{};
 
 	virtual void Process(float *out, uint32 numSamples);
 	virtual const char *GetName() const { return "SidechainDSP"; }

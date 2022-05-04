@@ -453,7 +453,10 @@ bool Scoring::IsLaserHeld(uint32 laserIndex, bool includeSlams) const
 	if (m_holdObjects[laserIndex + 6])
 	{
 		// Check for slams
-		return (((LaserObjectState*)m_holdObjects[laserIndex + 6])->flags & LaserObjectState::flag_Instant) == 0;
+		auto obj = (LaserObjectState*)m_holdObjects[laserIndex + 6];
+		if ((obj->flags & LaserObjectState::flag_Instant) && obj->next)
+			return true;
+		return !(obj->flags & LaserObjectState::flag_Instant);
 	}
 	return false;
 }

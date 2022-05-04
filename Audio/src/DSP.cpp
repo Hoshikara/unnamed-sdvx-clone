@@ -2,7 +2,6 @@
 #include "DSP.hpp"
 #include "AudioOutput.hpp"
 #include "Audio_Impl.hpp"
-#include <Shared/Interpolation.hpp>
 
 void PanDSP::Process(float *out, uint32 numSamples)
 {
@@ -217,6 +216,7 @@ void GateDSP::SetLength(double length)
 }
 void GateDSP::SetGating(float gating)
 {
+    gating = Math::Clamp(gating, 0.f, 1.f);
 	float flength = (float)m_length;
 	m_gating = gating;
 	m_halfway = (uint32)(flength * gating);
@@ -335,6 +335,7 @@ void RetriggerDSP::SetResetDuration(uint32 resetDuration)
 }
 void RetriggerDSP::SetGating(float gating)
 {
+    gating = Math::Clamp(gating, 0.f, 1.f);
 	m_gating = gating;
 	m_gateLength = (uint32)((float)m_length * gating);
 }
@@ -670,12 +671,8 @@ private:
 	Vector<float> m_receiveBuffer;
 
 public:
-	PitchShiftDSP_Impl()
-	{
-	}
-	~PitchShiftDSP_Impl()
-	{
-	}
+	PitchShiftDSP_Impl() = default;
+	~PitchShiftDSP_Impl() = default;
 	void Init(uint32 sampleRate)
 	{
 		m_soundtouch.setChannels(2);

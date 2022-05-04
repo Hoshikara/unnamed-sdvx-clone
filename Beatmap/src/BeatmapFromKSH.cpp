@@ -198,12 +198,7 @@ struct MultiParamRange
 static MultiParam ParseParam(const String &in)
 {
 	MultiParam ret;
-	if (in.find('.') != -1)
-	{
-		ret.type = MultiParam::Float;
-		sscanf(*in, "%f", &ret.fval);
-	}
-	else if (in.find('/') != -1)
+	if (in.find('/') != -1)
 	{
 		ret.type = MultiParam::Float;
 		String a, b;
@@ -222,6 +217,11 @@ static MultiParam ParseParam(const String &in)
 		sscanf(*in, "%i", &percentage);
 		ret.fval = percentage / 100.0;
 	}
+    else if (in.find('.') != -1)
+	{
+		ret.type = MultiParam::Float;
+		sscanf(*in, "%f", &ret.fval);
+	}
 	else
 	{
 		ret.type = MultiParam::Int;
@@ -236,7 +236,7 @@ AudioEffect ParseCustomEffect(const KShootEffectDefinition &def, Vector<String> 
 	bool typeSet = false;
 
 	Map<String, MultiParamRange> params;
-	for (auto s : def.parameters)
+	for (const auto& s : def.parameters)
 	{
 		// This one is easy
 		if (s.first == "type")

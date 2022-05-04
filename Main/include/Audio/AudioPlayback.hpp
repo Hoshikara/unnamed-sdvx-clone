@@ -122,4 +122,6 @@ private:
 	class DSP *m_buttonDSPs[2] = {nullptr};
 	HoldObjectState *m_currentHoldEffects[2] = {nullptr};
 	float m_effectMix[2] = {0.0f};
+
+    bool m_SkipEffectIfInputIsZero();
 };
