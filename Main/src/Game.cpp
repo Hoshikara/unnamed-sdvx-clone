@@ -3167,6 +3167,14 @@ PlaybackOptions Game::PlaybackOptionsFromSettings()
 	GaugeTypes gaugeType = g_gameConfig.GetEnum<Enum_GaugeTypes>(GameConfigKeys::GaugeType);
 	if (gaugeType == GaugeTypes::Hard)
 		options.gaugeType = GaugeType::Hard;
+    else if (gaugeType == GaugeTypes::Permissive)
+		options.gaugeType = GaugeType::Permissive;
+	else if (gaugeType == GaugeTypes::Blastive)
+	{
+		options.gaugeType = GaugeType::Blastive;
+		options.gaugeLevel = (float)g_gameConfig.GetInt(GameConfigKeys::BlastiveLevel) / 2.0f;
+	}
+
 	options.mirror = g_gameConfig.GetBool(GameConfigKeys::MirrorChart);
 	options.random = g_gameConfig.GetBool(GameConfigKeys::RandomizeChart);
 	options.backupGauge = g_gameConfig.GetBool(GameConfigKeys::BackupGauge);
