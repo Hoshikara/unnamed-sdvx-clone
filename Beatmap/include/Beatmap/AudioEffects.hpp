@@ -161,17 +161,29 @@ struct AudioEffect
 			EffectParam<int32> offset;
 			// Depth of the effect (samples)
 			EffectParam<int32> depth;
+			// Feedback (0-1)
+			EffectParam<float> feedback;
+			// Stereo width (0-1)
+			EffectParam<float> stereoWidth;
+			// Volume of added source audio + delayed source audio (0-1)
+			EffectParam<float> volume;
 		} flanger;
 		struct
 		{
+			// Number of stages
+			EffectParam<int32> stage;
 			// Minimum frequency (Hz)
 			EffectParam<float> min;
 			// Maximum frequency (Hz)
 			EffectParam<float> max;
-			// Depth of the effect (>=0)
-			EffectParam<float> depth;
+			// Q factor (0-1)
+			EffectParam<float> q;
 			// Feedback (0-1)
 			EffectParam<float> feedback;
+			// Stereo width (0-1)
+			EffectParam<float> stereoWidth;
+			// High cut gain (dB)
+			EffectParam<float> hiCutGain;
 		} phaser;
 		struct
 		{
@@ -187,6 +199,17 @@ struct AudioEffect
 			// Q factor for filter (>0)
 			EffectParam<float> q;
 		} wobble;
+		struct
+		{
+			// Time to fully reduce volume
+			EffectParam<EffectDuration> attackTime;
+			// Time to keep volume at maximum reduced value
+			EffectParam<EffectDuration> holdTime;
+			// Time to restore volume
+			EffectParam<EffectDuration> releaseTime;
+			// Ratio to reduce volume by
+			EffectParam<float> ratio;
+		} sidechain;
 		struct
 		{
 			// Ammount of echo (0-1)
