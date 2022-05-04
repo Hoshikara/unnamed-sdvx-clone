@@ -830,8 +830,9 @@ public:
         }
 		else
 		{
-            m_track->SetViewRange(8.0f / m_hispeed);
-            m_track->scrollSpeed = m_hispeed * m_playback.GetCurrentTimingPoint().GetBPM();
+            float modifiedSpeed = m_hispeed * (2 - m_playOptions.playbackSpeed);
+			m_track->SetViewRange(8.0f / modifiedSpeed);
+            m_track->scrollSpeed = modifiedSpeed * m_playback.GetCurrentTimingPoint().GetBPM();
         }
 
 		// Get render state from the camera
@@ -1944,8 +1945,15 @@ public:
         auto buttonIndex = (uint32) button;
 		bool skipEffect = m_scoring.HoldObjectAvailable(buttonIndex, false) && (!m_delayedHitEffects || buttonIndex > 3);
 
-		if (!skipEffect)
-            m_track->AddHitEffect(buttonIdx, c, st && st->type == ObjectType::Hold);
+		if (!skipEffect) {
+            int r = (int) rating;
+
+            if ((rating == ScoreHitRating::Perfect) && (abs(delta) <= 23)) {
+                r = 4;
+            }
+
+            m_track->AddHitEffect(buttonIdx, c, st && st->type == ObjectType::Hold, r);
+        }
 
 		if (st != nullptr && st->hasSample)
 		{
@@ -2865,7 +2873,7 @@ public:
 
 		// hispeed
 		lua_pushstring(L, "hispeed");
-		lua_pushnumber(L, m_hispeed);
+		lua_pushnumber(L, m_hispeed * (2 - m_playOptions.playbackSpeed));
 		lua_settable(L, -3);
 		// playback speed
 		lua_pushstring(L, "playbackSpeed");

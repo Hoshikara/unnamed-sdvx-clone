@@ -29,11 +29,12 @@ struct ButtonHitEffect : TimedEffect
 	ButtonHitEffect();
 	void Draw(class RenderQueue& rq) override;
 	void Tick(float deltaTime) override;
-	void Reset(int buttonCode, Color color, bool hold);
+	void Reset(int buttonCode, Color color, bool hold, int rating);
 	float GetRate() const { return Math::Min(time, hitEffectDuration) / duration; }
 
 	uint32 buttonCode; // Only used for Draw
 	Color color;
+    int rating = 0;
 	float delayFadeDuration = 0;
 	bool held = false;
 	float hitEffectDuration;
@@ -116,7 +117,7 @@ public:
 
 	// Adds a sprite effect to the track
 	void AddEffect(struct TimedEffect* effect);
-	void AddHitEffect(uint32 buttonCode, Color color, bool hold = false);
+	void AddHitEffect(uint32 buttonCode, Color color, bool hold = false, int rating = 0);
 	void ClearEffects();
 
 	void SetViewRange(float newRange);
@@ -184,6 +185,7 @@ public:
 	Material trackOverlay;
 
 	/* Scoring and feedback elements */
+    Texture hitBeamTextures[5];
 	Texture scoreHitTexture;
 	Texture scoreHitTextures[3]; // Ok, Miss, Perfect
 	// Combo counter sprite sheet

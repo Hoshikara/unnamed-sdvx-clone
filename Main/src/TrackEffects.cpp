@@ -20,10 +20,11 @@ ButtonHitEffect::ButtonHitEffect() : TimedEffect(0)
 {
 }
 
-void ButtonHitEffect::Reset(int buttonCode, Color color, bool hold)
+void ButtonHitEffect::Reset(int buttonCode, Color color, bool hold, int rating)
 {
 	assert(buttonCode < 6);
 	this->color = color;
+    this->rating = rating;
 	duration = hitEffectDuration;
 	time = hitEffectDuration + (hold ? 0 : delayFadeDuration);
 	held = buttonCode < 4 && ((track->hitEffectAutoplay && hold) || !track->hitEffectAutoplay);
@@ -67,10 +68,10 @@ void ButtonHitEffect::Draw(class RenderQueue& rq)
 	}
 
 	Vector2 hitEffectSize = Vector2(w, 0.0f);
-	hitEffectSize.y = track->scoreHitTexture->CalculateHeight(hitEffectSize.x) * yMult;
+	hitEffectSize.y = track->hitBeamTextures[rating]->CalculateHeight(hitEffectSize.x) * yMult;
 	Color c = color.WithAlpha(GetRate() * (alphaScale + hiSpeedAlphaOffset));
 	c.w *= yMult / 2.f;
-	track->DrawSprite(rq, Vector3(x, hitEffectSize.y * 0.5f, 0.0f), hitEffectSize, track->scoreHitTexture, c);
+	track->DrawSprite(rq, Vector3(x, hitEffectSize.y * 0.5f, 0.0f), hitEffectSize, track->hitBeamTextures[rating], c);
 }
 
 ButtonHitRatingEffect::ButtonHitRatingEffect(uint32 buttonCode, ScoreHitRating rating) : TimedEffect(0.3f), buttonCode(buttonCode), rating(rating)

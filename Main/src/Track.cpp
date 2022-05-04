@@ -70,6 +70,10 @@ bool Track::AsyncLoad()
 		loader->AddTexture(scoreHitTextures[i], Utility::Sprintf("score%d.png", i));
 	}
 
+    for(uint32 i = 0; i < 5; i++) {
+        loader->AddTexture(hitBeamTextures[i], Utility::Sprintf("hitbeam%d.png", i));
+    }
+
 	// Load Button object
 	loader->AddTexture(buttonTexture, "button.png");
 	loader->AddTexture(buttonHoldTexture, "buttonhold.png");
@@ -123,6 +127,10 @@ bool Track::AsyncFinalize()
 	trackTickTexture->SetWrap(TextureWrap::Repeat, TextureWrap::Clamp);
 	trackTickLength = trackTickTexture->CalculateHeight(buttonTrackWidth);
 	scoreHitTexture->SetWrap(TextureWrap::Clamp, TextureWrap::Clamp);
+
+    for (auto &hitBeamTexture : hitBeamTextures) {
+		hitBeamTexture->SetWrap(TextureWrap::Clamp, TextureWrap::Repeat);
+	}
 
 	buttonTexture->SetMipmaps(true);
 	buttonTexture->SetFilter(true, true, 16.0f);
@@ -245,7 +253,7 @@ bool Track::AsyncFinalize()
 			{
 				bfx.delayFadeDuration = FX_DELAY_FADE_DURATION;
 				bfx.hitEffectDuration = FX_HIT_EFFECT_DURATION;
-				bfx.alphaScale = 0.45f;
+				bfx.alphaScale = 0.8f;
 			}
 		}
 		else
@@ -729,9 +737,9 @@ void Track::AddEffect(TimedEffect* effect)
 	effect->track = this;
 }
 
-void Track::AddHitEffect(uint32 buttonCode, Color color, bool hold)
+void Track::AddHitEffect(uint32 buttonCode, Color color, bool hold, int rating)
 {
-	m_buttonHitEffects[buttonCode].Reset(buttonCode, color, hold);
+	m_buttonHitEffects[buttonCode].Reset(buttonCode, color, hold, rating);
 }
 
 void Track::ClearEffects()
@@ -814,7 +822,7 @@ void Track::OnHoldEnter(Input::Button buttonCode)
     const auto buttonIndex = (uint32)buttonCode;
     if (buttonIndex >= 6)
         return;
-    m_buttonHitEffects[buttonIndex].Reset(buttonIndex, hitColors[(size_t)ScoreHitRating::Perfect], true);
+    m_buttonHitEffects[buttonIndex].Reset(buttonIndex, hitColors[(size_t)ScoreHitRating::Perfect], true, 4);
 }
 
 void Track::OnButtonReleased(Input::Button buttonCode)
