@@ -140,4 +140,6 @@ public:
 	virtual void SetGauge(float) = 0;
 
 	virtual void SetAllGaugeValues(const Vector<float> values) = 0;
+
+    virtual void PermanentlyHideTickObject(MapTime t, int lane) = 0;
 };

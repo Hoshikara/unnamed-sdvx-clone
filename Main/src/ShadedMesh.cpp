@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "ShadedMesh.hpp"
 #include "Application.hpp"
+#include "Game.hpp"
+#include "Camera.hpp"
+#include "Track.hpp"
 #include "lua.hpp"
 
 ShadedMesh::ShadedMesh() {
@@ -33,19 +36,43 @@ void ShadedMesh::Draw() {
 	rq->DrawScissored(g_application->GetCurrentGUIScissor() ,g_application->GetCurrentGUITransform(), m_mesh, m_material, m_params);
 }
 
+void ShadedMeshOnTrack::DrawOnTrack() {
+	RenderState rs = m_game->GetCamera().CreateRenderState(m_clip);
+	RenderQueue rq(g_gl, rs);
+	Transform t = m_game->GetTrack().trackOrigin;
+	t *= Transform::Translation(m_trackPos);
+	t *= Transform::Scale(m_scale);
+	rq.Draw(t, m_mesh, m_material, m_params);
+	rq.Process();
+}
+
 void ShadedMesh::SetData(Vector<MeshGenerators::SimpleVertex>& data) {
 	m_mesh->SetData(data);
 }
 
 void ShadedMesh::AddTexture(const String& name, const String& file) {
+    auto* oldTex = m_textures.Find(file);
+	if (oldTex)
+	{
+		SetParam(name, *oldTex);
+		return;
+	}
 	auto newTex = g_application->LoadTexture(file, true);
-	m_textures.Add(name, newTex);
+	m_textures.Add(file, newTex); // Cache texture
 	SetParam(name, newTex);
 }
 
 void ShadedMesh::AddSkinTexture(const String& name, const String& file) {
+    String key = "skin/" + file;
+	auto* oldTex = m_textures.Find(key);
+	if (oldTex)
+	{
+		SetParam(name, *oldTex);
+		return;
+	}
+
 	auto newTex = g_application->LoadTexture(file);
-	m_textures.Add(name, newTex);
+	m_textures.Add(key, newTex); // Cache texture
 	SetParam(name, newTex);
 }
 
@@ -107,7 +134,7 @@ int lSetData(lua_State* L) {
 		lua_pop(L, 5);
 
 		MeshGenerators::SimpleVertex newVert;
-		newVert.pos = { x, y, 0.0f};
+		newVert.pos = { x, y, 0.0f };
 		newVert.tex = { u, v };
 		newData.Add(newVert);
 	}
@@ -115,12 +142,145 @@ int lSetData(lua_State* L) {
 	return 0;
 }
 
+#define GET_TRACK_MESH(L, object) \
+	ShadedMesh** userdata = static_cast<ShadedMesh**>(lua_touserdata(L, 1)); \
+	if (!userdata) { luaL_error(L, "null userdata"); return 0; } \
+	object = dynamic_cast<ShadedMeshOnTrack*>(*userdata); \
+	if (object == nullptr) { luaL_error(L, "Object is an instance of ShadedMeshOnTrack"); return 0; }
+
+int lUseGameMesh(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object)
+	object->lUseGameMesh(L);
+	return 0;
+}
+
+int lSetPosOnTrack(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object)
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
+	float z = 0.0f;
+	if (lua_gettop(L) >= 4)
+		z = luaL_checknumber(L, 4);
+
+	object->SetTrackPos(x, y, z);
+	return 0;
+}
+
+int lGetPosOnTrack(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	auto& v = object->GetTrackPos();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	lua_pushnumber(L, v.z);
+	return 3;
+}
+
+int lSetScale(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	float x = luaL_checknumber(L, 2);
+	float y = luaL_checknumber(L, 3);
+	float z = 1.0f;
+	if (lua_gettop(L) >= 4)
+		z = luaL_checknumber(L, 4);
+
+	object->SetScale(x, y, z);
+	return 0;
+}
+
+int lScaleToLength(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+
+	float s = luaL_checknumber(L, 2) / object->GetLength();
+	object->GetScale().y = s;
+    return 0;
+}
+
+int lGetScale(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	auto& v = object->GetScale();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	lua_pushnumber(L, v.z);
+	return 3;
+}
+
+int lSetLength(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	float len = luaL_checknumber(L, 2);
+	object->SetLength(len);
+	return 0;
+}
+
+int lSetClipWithTrack(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	bool c = lua_toboolean(L, 2);
+	object->SetClipping(c);
+	return 0;
+}
+
+int lGetLength(lua_State* L)
+{
+	ShadedMeshOnTrack* object;
+	GET_TRACK_MESH(L, object);
+	lua_pushnumber(L, object->GetLength());
+	return 1;
+}
+
+
+void ShadedMeshOnTrack::lUseGameMesh(lua_State* L) {
+	const String s = luaL_checkstring(L, 2);
+	Track& track = m_game->GetTrack();
+	if (s == "button")
+	{
+		m_mesh = track.buttonMesh;
+		m_length = track.buttonLength;
+	}
+	else if (s == "fxbutton")
+	{
+		m_mesh = track.fxbuttonMesh;
+		m_length = track.fxbuttonLength;
+	}
+	else if (s == "track")
+	{
+		m_mesh = track.trackMesh;
+		m_length = track.trackLength;
+	}
+	else
+	{
+		luaL_error(L, (String("Game mesh not found: ")+s).c_str());
+	}
+}
+
 int lDraw(lua_State* L) {
 	ShadedMesh** userdata = static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	if (userdata)
 	{
 		ShadedMesh* object = *userdata;
-		object->Draw();
+
+		if (ShadedMeshOnTrack* objOnTrack = dynamic_cast<ShadedMeshOnTrack*>(object))
+		{
+			objOnTrack->DrawOnTrack();
+		}
+		else
+		{
+			object->Draw();
+		}
 	}
 	else {
 		luaL_error(L, "null userdata");
@@ -237,6 +397,7 @@ int __index(lua_State* L) {
 	String fname = lua_tostring(L, 2);
 	Map<String, lua_CFunction> fmap;
 	Map<String, int> constMap;
+    Map<String, double> doubleConstMap;
 	fmap.Add("Draw", lDraw);
 	fmap.Add("AddTexture", lAddTexture);
 	fmap.Add("AddSkinTexture", lAddSkinTexture);
@@ -259,6 +420,23 @@ int __index(lua_State* L) {
 	constMap.Add("PRIM_LINESTRIP", (int)PrimitiveType::LineStrip);
 	constMap.Add("PRIM_POINTLIST", (int)PrimitiveType::PointList);
 	
+    if (auto* obj = dynamic_cast<ShadedMeshOnTrack*>(object))
+	{
+		fmap.Add("UseGameMesh", lUseGameMesh);
+		fmap.Add("SetPosOnTrack", lSetPosOnTrack);
+		fmap.Add("GetPosOnTrack", lGetPosOnTrack);
+		fmap.Add("SetScale", lSetScale);
+		fmap.Add("GetScale", lGetScale);
+		fmap.Add("SetLength", lSetLength);
+		fmap.Add("GetLength", lGetLength);
+		fmap.Add("ScaleToLength", lScaleToLength);
+		fmap.Add("SetClipWithTrack", lSetClipWithTrack);
+		Track& track = obj->GetGame()->GetTrack();
+		doubleConstMap.Add("BUTTON_TEXTURE_LENGTH", track.buttonLength);
+		doubleConstMap.Add("FXBUTTON_TEXTURE_LENGTH", track.fxbuttonLength);
+		doubleConstMap.Add("TRACK_LENGTH", track.trackLength);
+		doubleConstMap.Add("TRACK_WIDTH", track.trackWidth);
+	}
 
 	auto function = fmap.find(fname);
 
@@ -276,6 +454,12 @@ int __index(lua_State* L) {
 		return 1;
 	}
 		
+    auto doubleConstValue = doubleConstMap.find(fname);
+	if (doubleConstValue != doubleConstMap.end())
+	{
+		lua_pushinteger(L, doubleConstValue->second);
+		return 1;
+	}
 
 	return luaL_error(L, *Utility::Sprintf("ShadedMesh has no: '%s'", *fname));
 }
@@ -288,18 +472,19 @@ int __gc(lua_State* L) {
 
 int ShadedMesh::lNew(lua_State* L)
 {
+    ShadedMesh** place;
 	if (lua_gettop(L) == 2)
 	{
-		ShadedMesh** place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
+		place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
 		*place = new ShadedMesh(luaL_checkstring(L, 1), luaL_checkstring(L, 2));
 	}
 	else if (lua_gettop(L) == 1)
 	{
-		ShadedMesh** place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
+		place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
 		*place = new ShadedMesh(luaL_checkstring(L, 1));
 	}
 	else {
-		ShadedMesh** place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
+		place = (ShadedMesh**)lua_newuserdata(L, sizeof(ShadedMesh*));
 		*place = new ShadedMesh();
 	}
 
@@ -313,4 +498,34 @@ int ShadedMesh::lNew(lua_State* L)
 	lua_setmetatable(L, -2);
 	return 1;
 
+}
+
+int ShadedMeshOnTrack::lNew(lua_State* L, class Game* game)
+{
+	// TODO We could maybe use templates to combine this better with above
+	ShadedMeshOnTrack** place;
+	if (lua_gettop(L) == 2)
+	{
+		place = (ShadedMeshOnTrack**)lua_newuserdata(L, sizeof(ShadedMeshOnTrack*));
+		*place = new ShadedMeshOnTrack(game, luaL_checkstring(L, 1), luaL_checkstring(L, 2));
+	}
+	else if (lua_gettop(L) == 1)
+	{
+		place = (ShadedMeshOnTrack**)lua_newuserdata(L, sizeof(ShadedMeshOnTrack*));
+		*place = new ShadedMeshOnTrack(game, luaL_checkstring(L, 1));
+	}
+	else {
+		place = (ShadedMeshOnTrack**)lua_newuserdata(L, sizeof(ShadedMeshOnTrack*));
+		*place = new ShadedMeshOnTrack(game);
+	}
+
+	lua_newtable(L);
+
+	lua_pushcfunction(L, __index);
+	lua_setfield(L, -2, "__index");
+	lua_pushcfunction(L, __gc);
+	lua_setfield(L, -2, "__gc");
+
+	lua_setmetatable(L, -2);
+	return 1;
 }

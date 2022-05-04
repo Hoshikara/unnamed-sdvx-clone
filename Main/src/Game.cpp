@@ -171,6 +171,7 @@ private:
 	Vector<ScoreReplay> m_scoreReplays;
 	MapDatabase* m_db;
 	std::unordered_set<ObjectState*> m_hiddenObjects;
+    std::unordered_set<ObjectState*> m_permanentlyHiddenObjects;
 
 	// Hold detection for restart and exit
 	MapTime m_restartTriggerTime = 0;
@@ -935,7 +936,8 @@ public:
 
 		for(auto& object : m_currentObjectSet)
 		{
-			if(m_hiddenObjects.find(object) == m_hiddenObjects.end())
+			// TODO(itszn) use something better than m_permanentlyHiddenObjects
+			if (m_hiddenObjects.find(object) == m_hiddenObjects.end() && m_permanentlyHiddenObjects.find(object) == m_permanentlyHiddenObjects.end())
 			{
 				MultiObjectState* mobj = (MultiObjectState*)object;
 				if (object->type == ObjectType::Hold && (mobj->button.index == 4 || mobj->button.index == 5))
@@ -1078,8 +1080,11 @@ public:
 			NVG_FLUSH();
 
 		// Render foreground
-		if(m_foreground)
+		if (m_foreground)
+        {
 			m_foreground->Render(deltaTime);
+            glFlush();
+        }
 
 		// Render Lua HUD
 		lua_getglobal(m_lua, "render");
@@ -1148,6 +1153,12 @@ public:
 
 		if (m_practiceSetupDialog)
 			m_practiceSetupDialog->Render(deltaTime);
+	}
+
+    virtual void PermanentlyHideTickObject(MapTime t, int lane) override
+	{
+		ObjectState* obj = m_playback.GetFirstButtonOrHoldAfterTime(t, lane);
+		m_permanentlyHiddenObjects.insert(obj);
 	}
 
 	virtual void OnSuspend() override
