@@ -556,6 +556,9 @@ public:
 			{
 				m_simpleNoteHitStats.Add(shs);
 			}
+            else {
+				assert(shs.lane >= 6 || shs.hold > 0);
+			}
 		}
 
 		//this has been moved to the top so that it is instantiated in time for IR submission
@@ -810,8 +813,53 @@ public:
 				m_PushFloatToTable("timeFrac",
 					Math::Clamp(static_cast<float>(simpleHitStat.time) / (m_beatmapDuration > 0 ? m_beatmapDuration : 1), 0.0f, 1.0f));
 				m_PushIntToTable("delta", simpleHitStat.delta);
+                m_PushIntToTable("hold", 0);
 
 				lua_rawseti(m_lua, -2, i + 1);
+			}
+			lua_settable(m_lua, -3);
+
+            int index = 1;
+			lua_pushstring(m_lua, "holdHitStats");
+			lua_newtable(m_lua);
+			for (size_t i = 0; i < m_simpleHitStats.size(); ++i)
+			{
+				const SimpleHitStat simpleHitStat = m_simpleHitStats[i];
+				if (simpleHitStat.hold == 0)
+					continue;
+
+				lua_newtable(m_lua);
+				m_PushIntToTable("rating", simpleHitStat.rating);
+				m_PushIntToTable("lane", simpleHitStat.lane);
+				m_PushIntToTable("time", simpleHitStat.time);
+				m_PushFloatToTable("timeFrac",
+					Math::Clamp(static_cast<float>(simpleHitStat.time) / (m_beatmapDuration > 0 ? m_beatmapDuration : 1), 0.0f, 1.0f));
+				m_PushIntToTable("delta", simpleHitStat.delta);
+				m_PushIntToTable("hold", simpleHitStat.hold);
+
+				lua_rawseti(m_lua, -2, index++);
+			}
+			lua_settable(m_lua, -3);
+
+			index = 1;
+			lua_pushstring(m_lua, "laserHitStats");
+			lua_newtable(m_lua);
+			for (size_t i = 0; i < m_simpleHitStats.size(); ++i)
+			{
+				const SimpleHitStat simpleHitStat = m_simpleHitStats[i];
+				if (simpleHitStat.lane < 6)
+					continue;
+
+				lua_newtable(m_lua);
+				m_PushIntToTable("rating", simpleHitStat.rating);
+				m_PushIntToTable("lane", simpleHitStat.lane);
+				m_PushIntToTable("time", simpleHitStat.time);
+				m_PushFloatToTable("timeFrac",
+					Math::Clamp(static_cast<float>(simpleHitStat.time) / (m_beatmapDuration > 0 ? m_beatmapDuration : 1), 0.0f, 1.0f));
+				m_PushIntToTable("delta", simpleHitStat.delta);
+				m_PushIntToTable("hold", 0);
+
+				lua_rawseti(m_lua, -2, index++);
 			}
 			lua_settable(m_lua, -3);
 		}

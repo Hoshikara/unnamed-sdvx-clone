@@ -752,6 +752,7 @@ void Scoring::m_UpdateTicks()
 							HitStat* stat = new HitStat(tick->object);
 							stat->time = currentTime;
 							stat->rating = ScoreHitRating::Perfect;
+                            stat->hold = ((HoldObjectState*)tick->object)->duration;
 							hitStats.Add(stat);
 
 						    m_prevHoldHit[buttonCode] = true;
@@ -763,6 +764,7 @@ void Scoring::m_UpdateTicks()
 							HitStat* stat = new HitStat(tick->object);
 							stat->time = currentTime;
 							stat->rating = ScoreHitRating::Miss;
+                            stat->hold = ((HoldObjectState*)tick->object)->duration;
 							hitStats.Add(stat);
 
                             m_prevHoldHit[buttonCode] = false;
