@@ -118,6 +118,8 @@ public:
 
 	virtual const PlayOptions& GetPlayOptions() const = 0;
 
+    virtual class LuaBindable* MakeTrackLuaBindable(struct lua_State* L) = 0;
+
 	// Get lua state
 	virtual struct lua_State* GetLuaState() = 0;
 	// Set demo mode

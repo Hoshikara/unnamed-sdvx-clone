@@ -27,6 +27,7 @@
 
 #include "PracticeModeSettingsDialog.hpp"
 #include "Audio/OffsetComputer.hpp"
+#include <ShadedMesh.hpp>
 
 // Try load map helper
 Ref<Beatmap> TryLoadMap(const String& path)
@@ -181,6 +182,8 @@ private:
 
 	HitWindow m_hitWindow = HitWindow::NORMAL;
 
+    LuaBindable* m_trackBindable = nullptr;
+
     uint32 m_releaseTimes[static_cast<size_t>(Input::Button::Length)] = { 0 };
 	uint32 m_pressTimes[static_cast<size_t>(Input::Button::Length)] = { 0 };
 	uint8 m_hispeedAdjustMode = 0; // for skins, 0 = not adjusting, 1 = coarse adjustment, 2 = fine adjustment
@@ -225,6 +228,12 @@ public:
 				m_multiplayer->GetTCP().ClearState(m_lua);
 		}
 		delete[] m_fxSamples;
+
+        if (m_trackBindable)
+		{
+			delete m_trackBindable;
+			m_trackBindable = nullptr;
+		}
 		
 		// Save hispeed
 		if (m_saveSpeed)
@@ -460,6 +469,10 @@ public:
 		m_lua = g_application->LoadScript("gameplay");
 		if (!m_lua)
 			return false;
+
+        m_trackBindable = MakeTrackLuaBindable(m_lua);
+		m_trackBindable->Push();
+		lua_settop(m_lua, 0);
 
 		if (g_gameConfig.GetBool(GameConfigKeys::EnableHiddenSudden)) {
 			m_track->suddenCutoff = g_gameConfig.GetFloat(GameConfigKeys::SuddenCutoff);
@@ -2720,6 +2733,72 @@ public:
 	inline HitWindow GetHitWindow() const
 	{
 		return m_hitWindow;
+	}
+
+    virtual LuaBindable* MakeTrackLuaBindable(struct lua_State* L)
+	{
+		auto* bind = new LuaBindable(L, "track");
+		bind->AddFunction("GetCurrentLaneXPos", this, &Game_Impl::lTrackGetCurrentLaneXPos);
+		bind->AddFunction("GetYPosForTime", this, &Game_Impl::lTrackGetYPosForTime);
+		bind->AddFunction("GetLengthForDuration", this, &Game_Impl::lTrackGetLengthForDuration);
+		bind->AddFunction("HideObject", this, &Game_Impl::lTrackHideObject);
+		bind->AddFunction("CreateShadedMeshOnTrack", this, &Game_Impl::lCreateShadedMeshOnTrack);
+		return bind;
+	}
+
+	int lCreateShadedMeshOnTrack(struct lua_State* L)
+	{
+		lua_remove(L, 1); // remove the scriptable arg
+		return ShadedMeshOnTrack::lNew(L, this);
+	}
+
+	int lTrackGetCurrentLaneXPos(struct lua_State* L)
+	{
+		int lane = luaL_checkinteger(L, 2) - 1;
+
+		float xposition;
+		if (lane < 4)
+			xposition = Track::buttonTrackWidth * -0.5f + Track::buttonWidth * lane;
+		else
+			xposition = Track::buttonTrackWidth * -0.5f + Track::fxbuttonWidth *(lane - 4);
+
+		xposition += (lane < 2? -1 : 1)* 0.5 * this->GetTrack().centerSplit * Track::buttonWidth;
+		lua_pushnumber(L, xposition);
+		return 1;
+	}
+
+	int lTrackGetYPosForTime(struct lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+
+		Track& track = this->GetTrack();
+		float viewRange = track.GetViewRange();
+		float position = this->GetPlayback().TimeToViewDistance(time) / viewRange;
+		float y = track.trackLength * position;
+		lua_pushnumber(L, y);
+		return 1;
+	}
+
+	int lTrackGetLengthForDuration(struct lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+		int duration = luaL_checkinteger(L, 3);
+		Track& track = this->GetTrack();
+		float viewRange = track.GetViewRange();
+
+		float trackScale = (this->GetPlayback().DurationToViewDistanceAtTime(time, duration) / viewRange);
+		float scale = trackScale * track.trackLength;
+		lua_pushnumber(L, scale);
+		return 1;
+	}
+
+	int lTrackHideObject(struct lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+		int lane = luaL_checkinteger(L, 3) - 1;
+
+		this->PermanentlyHideTickObject(time, lane);
+		return 0;
 	}
 
 	virtual bool IsPlaying() const override
