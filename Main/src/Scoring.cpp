@@ -820,14 +820,6 @@ void Scoring::m_UpdateTicks()
 							hitStats.Add(stat);
 							processed = true;
 						}
-                        else {
-                            m_TickMiss(tick, buttonCode, 0);
-                            // Add miss replay hitstat
-							HitStat* stat = new HitStat(tick->object);
-							stat->time = currentTime;
-							stat->rating = ScoreHitRating::Miss;
-							hitStats.Add(stat);
-                        }
 					}
 				}
 			}
