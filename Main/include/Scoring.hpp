@@ -276,7 +276,7 @@ private:
 	void m_SetHoldObject(ObjectState* obj, uint32 index);
 	void m_ReleaseHoldObject(ObjectState* obj);
 	void m_ReleaseHoldObject(uint32 index);
-	bool m_IsBeingHold(const ScoreTick* tick) const;
+	bool m_IsBeingHeld(const ScoreTick* tick) const;
 
 	// Check whether the laser segment is the beginning
 	bool m_IsRoot(const LaserObjectState* laser) const;

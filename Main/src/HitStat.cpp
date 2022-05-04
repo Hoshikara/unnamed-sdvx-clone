@@ -2,7 +2,7 @@
 #include "HitStat.hpp"
 #include "GameConfig.hpp"
 
-const HitWindow HitWindow::NORMAL = HitWindow(46, 92);
+const HitWindow HitWindow::NORMAL = HitWindow(46, 150);
 const HitWindow HitWindow::HARD = HitWindow(23, 46);
 
 HitStat::HitStat(ObjectState* object) : object(object)
