@@ -24,6 +24,8 @@ Track::Track()
 
 Track::~Track()
 {
+    g_input.OnButtonReleased.Remove(this, &Track::OnButtonReleased);
+
 	delete loader;
 
 	for (auto & i : m_laserTrackBuilder)
@@ -35,6 +37,8 @@ Track::~Track()
 
 bool Track::AsyncLoad()
 {
+    g_input.OnButtonReleased.Add(this, &Track::OnButtonReleased);
+
 	loader = new AsyncAssetLoader();
 	String skin = g_application->GetCurrentSkin();
 
@@ -223,8 +227,6 @@ bool Track::AsyncFinalize()
 	timedHitEffect = new TimedHitEffect(false);
 	timedHitEffect->time = 0;
 	timedHitEffect->track = this;
-
-    g_input.OnButtonReleased.Add(this, &Track::OnButtonReleased);
 
 	bool delayedHitEffects = g_gameConfig.GetBool(GameConfigKeys::DelayedHitEffects);
 

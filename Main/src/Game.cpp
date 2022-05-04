@@ -209,8 +209,6 @@ public:
 
 	~Game_Impl()
 	{
-        if (m_track)
-            g_input.OnButtonReleased.Remove(m_track, &Track::OnButtonReleased);
         delete m_track;
 		delete m_background;
 		delete m_foreground;
