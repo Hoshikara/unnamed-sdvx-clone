@@ -365,7 +365,7 @@ void Input::m_OnButtonInput(Button b, bool pressed)
 	}
 
 	static Timer t;
-	if(b >= Button::LS_0Neg)
+	if(b >= Button::LS_0Neg && b <= Button::LS_1Pos)
 	{
 		int32 btnIdx = (int32)b - (int32)Button::LS_0Neg;
 		int32 laserIdx = btnIdx / 2;
