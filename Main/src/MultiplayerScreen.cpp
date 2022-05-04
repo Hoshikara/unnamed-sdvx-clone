@@ -829,6 +829,51 @@ void MultiplayerScreen::MousePressed(MouseButton button)
 	lua_settop(m_lua, 0);
 }
 
+bool MultiplayerScreen::m_returnToMainList()
+{
+	if (m_screenState == MultiplayerScreenState::ROOM_LIST)
+		return false;
+
+	// Exiting from name setup
+	if (m_userName == "")
+	{
+		m_suspended = true;
+		g_application->RemoveTickable(this);
+		return true;
+	}
+
+	if (m_screenState == MultiplayerScreenState::IN_ROOM)
+	{
+		nlohmann::json packet;
+		packet["topic"] = "room.leave";
+		m_tcp.SendJSON(packet);
+	}
+	else
+	{
+		nlohmann::json packet;
+		packet["topic"] = "server.rooms";
+		m_tcp.SendJSON(packet);
+	}
+
+	if (m_textInput->active)
+		m_textInput->SetActive(false);
+
+	if (m_screenState == MultiplayerScreenState::IN_ROOM) {
+		m_chatOverlay->AddMessage("You left the lobby", 207, 178, 41);
+	}
+
+	m_chatOverlay->EnableOpeningChat();
+
+	m_screenState = MultiplayerScreenState::ROOM_LIST;
+	m_stopPreview();
+	lua_pushstring(m_lua, "roomList");
+	lua_setglobal(m_lua, "screenState");
+	g_application->DiscordPresenceMulti("", 0, 0, "");
+	m_roomId = "";
+	m_hasSelectedMap = false;
+	return true;
+}
+
 void MultiplayerScreen::Tick(float deltaTime)
 {
 	// Tick the tcp socket even if we are suspended
@@ -1065,43 +1110,23 @@ void MultiplayerScreen::OnKeyPressed(SDL_Scancode code)
 	}
 	else if (code == SDL_SCANCODE_ESCAPE)
 	{
-		if (m_screenState != MultiplayerScreenState::ROOM_LIST)
+		int backScancode = g_gameConfig.GetInt(GameConfigKeys::Key_Back);
+//		SDL_Keycode k = SDL_GetKeyFromScancode(g_gameConfig.GetInt(GameConfigKeys::Key_Back));
+
+		if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) != InputDevice::Keyboard
+			|| backScancode != SDL_SCANCODE_ESCAPE)
 		{
-
-			// Exiting from name setup
-			if (m_userName == "")
+			switch (m_screenState)
 			{
-				m_suspended = true;
-				g_application->RemoveTickable(this);
-				return;
+				// Escape works for text editing
+			case MultiplayerScreenState::JOIN_PASSWORD:
+			case MultiplayerScreenState::NEW_ROOM_NAME:
+			case MultiplayerScreenState::NEW_ROOM_PASSWORD:
+			case MultiplayerScreenState::SET_USERNAME:
+				m_returnToMainList();
+			default:
+				break;
 			}
-
-			if (m_screenState == MultiplayerScreenState::IN_ROOM)
-			{
-				nlohmann::json packet;
-				packet["topic"] = "room.leave";
-				m_tcp.SendJSON(packet);
-			}
-			else
-			{
-				nlohmann::json packet;
-				packet["topic"] = "server.rooms";
-				m_tcp.SendJSON(packet);
-			}
-
-			if (m_textInput->active)
-				m_textInput->SetActive(false);
-
-			m_chatOverlay->AddMessage("You left the lobby", 207, 178, 41);
-			m_chatOverlay->EnableOpeningChat();
-
-			m_screenState = MultiplayerScreenState::ROOM_LIST;
-			m_stopPreview();
-			lua_pushstring(m_lua, "roomList");
-			lua_setglobal(m_lua, "screenState");
-			g_application->DiscordPresenceMulti("", 0, 0, "");
-			m_roomId = "";
-			m_hasSelectedMap = false;
 		}
 	}
 	else if (code == SDL_SCANCODE_RETURN)
@@ -1147,8 +1172,15 @@ void MultiplayerScreen::m_OnButtonPressed(Input::Button buttonCode)
 	if (IsSuspended() || m_settDiag.IsActive())
 		return;
 
-	if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard && (m_textInput->active || m_chatOverlay->IsOpen()))
-		return;
+	if (g_gameConfig.GetEnum<Enum_InputDevice>(GameConfigKeys::ButtonInputDevice) == InputDevice::Keyboard)
+	{
+		if (m_chatOverlay->IsOpen())
+			return;
+
+		// Allow Button Back while text editing
+		if (m_textInput->active && buttonCode != Input::Button::Back)
+			return;
+	}
 
 	m_timeSinceButtonPressed[buttonCode] = 0;
 
@@ -1170,6 +1202,9 @@ void MultiplayerScreen::m_OnButtonPressed(Input::Button buttonCode)
 			return;
 		}
 		break;
+    case Input::Button::Back:
+		if (m_returnToMainList())
+			return;
 	default:
 		break;
 	}

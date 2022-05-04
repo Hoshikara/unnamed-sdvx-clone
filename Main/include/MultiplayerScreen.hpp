@@ -149,6 +149,7 @@ private:
 	void m_render(float deltaTime);
 
 	void m_joinRoomWithToken();
+    bool m_returnToMainList();
 
 	void OnSearchStatusUpdated(String status);
 
