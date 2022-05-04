@@ -267,7 +267,7 @@ void OffsetComputer::ComputeEnergy()
 			if (energyInd >= COMPUTE_WINDOW) break;
 		}
 
-		const float nextAmp = ind < -1 || ind + 1 >= static_cast<int64>(m_pcmCount) ? 0 : std::hypotf(m_pcm[ind*2 + 2], m_pcm[ind*2 + 3]);
+		const float nextAmp = ind < -1 || ind + 1 >= static_cast<int64>(m_pcmCount) ? 0 : std::hypotf(m_pcm[2*ind + 2], m_pcm[2*ind + 3]);
 
 		// Compute energy based on Newton's laws (?)
 		const float v = (nextAmp - prevAmp) / 2;
