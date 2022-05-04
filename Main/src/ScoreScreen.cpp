@@ -963,7 +963,10 @@ public:
 				(screensetting == AutoScoreScreenshotSettings::Highscore && m_highScores.empty()) ||
 				(screensetting == AutoScoreScreenshotSettings::Highscore && m_score > (uint32)m_highScores.front()->score))
 			{
-				Capture();
+				if (!m_autoplay && !m_autoButtons)
+				{
+					Capture();
+				}
 			}
 			m_hasScreenshot = true;
 		}
@@ -1105,7 +1108,7 @@ public:
 		}
 		Vector2i size(w, h);
 		Image screenshot = ImageRes::Screenshot(g_gl, size, { x,y });
-		String screenshotPath = "screenshots/" + Shared::Time::Now().ToString() + ".png";
+		String screenshotPath = Path::Absolute("screenshots/" + Shared::Time::Now().ToString() + ".png");
 		if (screenshot.get() != nullptr)
 		{
 			screenshot->SavePNG(screenshotPath);
