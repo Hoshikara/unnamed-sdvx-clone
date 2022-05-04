@@ -105,7 +105,7 @@ public:
 	//else: index 0 = url, index 1 = version
 	Vector<String> GetUpdateAvailable();
 
-    AutoplayInfo* autoplayInfo;
+    AutoplayInfo* autoplayInfo = nullptr;
 
 private:
 	bool m_LoadConfig(String profileName = "");
