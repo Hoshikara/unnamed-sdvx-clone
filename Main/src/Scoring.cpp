@@ -759,6 +759,11 @@ void Scoring::m_UpdateTicks()
 					    else
 					    {
                             m_TickMiss(tick, buttonCode, 0);
+                            // Add miss replay hitstat
+							HitStat* stat = new HitStat(tick->object);
+							stat->time = currentTime;
+							stat->rating = ScoreHitRating::Miss;
+							hitStats.Add(stat);
 
                             m_prevHoldHit[buttonCode] = false;
 					    }
@@ -813,6 +818,14 @@ void Scoring::m_UpdateTicks()
 							hitStats.Add(stat);
 							processed = true;
 						}
+                        else {
+                            m_TickMiss(tick, buttonCode, 0);
+                            // Add miss replay hitstat
+							HitStat* stat = new HitStat(tick->object);
+							stat->time = currentTime;
+							stat->rating = ScoreHitRating::Miss;
+							hitStats.Add(stat);
+                        }
 					}
 				}
 			}
@@ -836,6 +849,14 @@ void Scoring::m_UpdateTicks()
 			if (delta > hitWindow.good && !processed)
 			{
 				m_TickMiss(tick, buttonCode, delta);
+                if (tick->HasFlag(TickFlags::Hold) || tick->HasFlag(TickFlags::Laser))
+				{
+					// Add miss replay hitstat
+					HitStat* stat = new HitStat(tick->object);
+					stat->time = currentTime;
+					stat->rating = ScoreHitRating::Miss;
+					hitStats.Add(stat);
+				}
 				processed = true;
 			}
 
