@@ -232,7 +232,7 @@ public:
 		timing.y = offsyncTimer;
 
 		float clearBorder = 0.70f;
-		if (game->GetPlaybackOptions().gaugeType != GaugeType::Normal)
+		if (game->GetScoring().GetTopGauge()->GetType() != GaugeType::Normal)
 		{
 			clearBorder = 0.30f;
 		}
