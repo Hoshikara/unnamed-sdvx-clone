@@ -108,8 +108,7 @@ void Application::ApplySettings()
 	Logger::Get().SetLogLevel(g_gameConfig.GetEnum<Logger::Enum_Severity>(GameConfigKeys::LogLevel));
 	g_gameWindow->SetVSync(g_gameConfig.GetBool(GameConfigKeys::VSync) ? 1 : 0);
 	m_showFps = g_gameConfig.GetBool(GameConfigKeys::ShowFps);
-    m_responsiveInputs = g_gameConfig.GetBool(GameConfigKeys::ResponsiveInputs);
-
+    m_loadResponsiveInputSetting();
     m_UpdateWindowPosAndShape();
 	m_OnWindowResized(g_gameWindow->GetWindowSize());
 	m_SaveConfig();
@@ -418,6 +417,41 @@ void Application::m_unpackSkins()
 		{
 			Path::Delete(fi.fullPath);
 		}
+	}
+}
+
+void Application::m_loadResponsiveInputSetting()
+{
+	QualityLevel responsiveInputSetting = g_gameConfig.GetEnum<Enum_QualityLevel>(GameConfigKeys::ResponsiveInputs);
+	switch (responsiveInputSetting)
+	{
+	case QualityLevel::Off:
+		m_responsiveInputs = false;
+		break;
+	case QualityLevel::Low:
+		m_responsiveInputs = true;
+		m_responsiveInputsSleep = 4;
+		break;
+	case QualityLevel::Medium:
+		m_responsiveInputs = true;
+		m_responsiveInputsSleep = 3;
+		break;
+	case QualityLevel::High:
+		m_responsiveInputs = true;
+		m_responsiveInputsSleep = 2;
+		break;
+	case QualityLevel::Ultra:
+		m_responsiveInputs = true;
+		m_responsiveInputsSleep = 1;
+		break;
+	case QualityLevel::Max:
+		m_responsiveInputs = true;
+		m_responsiveInputsSleep = 0;
+		break;
+	default:
+		m_responsiveInputs = false;
+		g_gameConfig.SetEnum<Enum_QualityLevel>(GameConfigKeys::ResponsiveInputs, QualityLevel::Off);
+		break;
 	}
 }
 
@@ -1037,7 +1071,7 @@ bool Application::m_Init()
 		m_fontBakeThread = Thread(BasicNuklearGui::BakeFontWithLock);
 	}
 
-    m_responsiveInputs = g_gameConfig.GetBool(GameConfigKeys::ResponsiveInputs);
+    m_loadResponsiveInputSetting();
     renderSema = SDL_CreateSemaphore(0);
 	m_renderThread = Thread(threadedRenderer);
 
@@ -1185,7 +1219,12 @@ void Application::m_Tick()
 			SDL_SemPost(renderSema);
 			while (rendering.load()) {
 				SDL_PumpEvents();
-				std::this_thread::yield();
+				if (m_responsiveInputsSleep) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(m_responsiveInputsSleep));
+				}
+				else {
+					std::this_thread::yield();
+				}
 			}
 			g_gl->MakeCurrent();
 		}

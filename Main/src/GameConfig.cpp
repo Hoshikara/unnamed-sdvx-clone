@@ -106,7 +106,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::LeadInTime, 3000);
 	Set(GameConfigKeys::PracticeLeadInTime, 1500);
 	Set(GameConfigKeys::AutoComputeSongOffset, false);
-    Set(GameConfigKeys::ResponsiveInputs, true);
+    SetEnum<Enum_QualityLevel>(GameConfigKeys::ResponsiveInputs, QualityLevel::Off);
 	SetEnum<Enum_SongOffsetUpdateMethod>(GameConfigKeys::UpdateSongOffsetAfterFirstPlay, SongOffsetUpdateMethod::None);
 	SetEnum<Enum_SongOffsetUpdateMethod>(GameConfigKeys::UpdateSongOffsetAfterEveryPlay, SongOffsetUpdateMethod::None);
 

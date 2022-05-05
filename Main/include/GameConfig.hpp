@@ -265,6 +265,14 @@ DefineEnum(ButtonComboModeSettings,
 		   Hold,
 		   Instant)
 
+DefineEnum(QualityLevel,
+           Off,
+	       Low,
+	       Medium,
+	       High,
+	       Ultra,
+	       Max)
+
 	// Config for game settings
 	class GameConfig : public Config<Enum_GameConfigKeys>
 {
