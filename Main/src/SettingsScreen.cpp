@@ -1216,7 +1216,7 @@ public:
 		}
 	}
 
-	bool Init()
+	bool Init() override
 	{
 		if (m_isGamepad)
 		{
@@ -1248,7 +1248,7 @@ public:
 		return true;
 	}
 
-	void Tick(float deltatime)
+	void Tick(float deltatime) override
 	{
 		if (m_knobs && m_isGamepad)
 		{
@@ -1279,7 +1279,7 @@ public:
 
 	}
 
-	void Render(float deltatime)
+	void Render(float deltatime) override
 	{
 		String prompt = "Press the key";
 
@@ -1320,7 +1320,7 @@ public:
 		}
 	}
 
-	virtual void OnKeyPressed(SDL_Scancode code)
+	void OnKeyPressed(SDL_Scancode code, int32 delta) override
 	{
 		if (!m_isGamepad && !m_knobs)
 		{
@@ -1368,11 +1368,11 @@ public:
 		}
 	}
 
-	virtual void OnSuspend()
+	void OnSuspend() override
 	{
 		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
-	virtual void OnRestore()
+	void OnRestore() override
 	{
 		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		//slot->anchor = Anchors::Full;
@@ -1406,7 +1406,7 @@ public:
 		g_input.OnButtonPressed.RemoveAll(this);
 	}
 
-	bool Init()
+	bool Init() override
 	{
 		g_input.GetInputLaserDir(0); //poll because there might be something idk
 
@@ -1424,13 +1424,13 @@ public:
 		return true;
 	}
 
-	void Tick(float deltatime)
+	void Tick(float deltatime) override
 	{
 		m_delta += g_input.GetAbsoluteInputLaserDir(0);
 
 	}
 
-	void Render(float deltatime)
+	void Render(float deltatime) override
 	{
 		const Vector2 center = { static_cast<float>(g_resolution.x / 2), static_cast<float>(g_resolution.y / 2) };
 
@@ -1487,17 +1487,17 @@ public:
 		}
 	}
 
-	virtual void OnKeyPressed(SDL_Scancode code)
+	void OnKeyPressed(SDL_Scancode code, int32 delta) override
 	{
 		if (code == SDL_SCANCODE_ESCAPE)
 			g_application->RemoveTickable(this);
 	}
 
-	virtual void OnSuspend()
+	void OnSuspend() override
 	{
 		//g_rootCanvas->Remove(m_canvas.As<GUIElementBase>());
 	}
-	virtual void OnRestore()
+	void OnRestore() override
 	{
 		//Canvas::Slot* slot = g_rootCanvas->Add(m_canvas.As<GUIElementBase>());
 		//slot->anchor = Anchors::Full;
