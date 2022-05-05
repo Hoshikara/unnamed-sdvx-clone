@@ -177,6 +177,11 @@ public:
 		bindable->AddFunction("GetTilt", this, &TestBackground::GetTilt);
 		bindable->AddFunction("GetScreenCenter", this, &TestBackground::GetScreenCenter);
 		bindable->AddFunction("GetClearTransition", this, &TestBackground::GetClearTransition);
+        bindable->AddFunction("CreateShadedMeshOnTrack", this, &TestBackground::CreateTrackMesh);
+		bindable->AddFunction("TrackGetCurrentLaneXPos", this, &TestBackground::GetLanePosition);
+		bindable->AddFunction("TrackGetYPosForTime", this, &TestBackground::GetTrackTickY);
+		bindable->AddFunction("TrackGetLengthForDuration", this, &TestBackground::GetTrackDurationYScale);
+		bindable->AddFunction("TrackHideObject", this, &TestBackground::HideTickObject);
 
 		bindable->Push();
 		lua_settop(lua, 0);
@@ -320,6 +325,61 @@ public:
 		lua_pushnumber(L, c.x);
 		lua_pushnumber(L, c.y);
 		return 2;
+	}
+
+    	int CreateTrackMesh(lua_State* L)
+	{
+		lua_remove(L, 1); // remove the scriptable arg
+		return ShadedMeshOnTrack::lNew(L, game);
+	}
+
+	int GetLanePosition(lua_State* L)
+	{
+		int lane = luaL_checkinteger(L, 2) - 1;
+
+		float xposition;
+		if (lane < 4)
+			xposition = Track::buttonTrackWidth * -0.5f + Track::buttonWidth * lane;
+		else
+			xposition = Track::buttonTrackWidth * -0.5f + Track::fxbuttonWidth *(lane - 4);
+
+		xposition += (lane < 2? -1 : 1)* 0.5 * game->GetTrack().centerSplit * Track::buttonWidth;
+		lua_pushnumber(L, xposition);
+		return 1;
+	}
+	int GetTrackDurationYScale(lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+		int duration = luaL_checkinteger(L, 3);
+		Track& track = game->GetTrack();
+		float viewRange = track.GetViewRange();
+
+		// TODO Generalize
+		float trackScale = (game->GetPlayback().DurationToViewDistanceAtTime(time, duration) / viewRange);
+		float scale = trackScale * track.trackLength;
+		lua_pushnumber(L, scale);
+		return 1;
+	}
+
+	int GetTrackTickY(lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+
+		Track& track = game->GetTrack();
+		float viewRange = track.GetViewRange();
+		float position = game->GetPlayback().TimeToViewDistance(time) / viewRange;
+		float y = track.trackLength * position;
+		lua_pushnumber(L, y);
+		return 1;
+	}
+
+	int HideTickObject(lua_State* L)
+	{
+		int time = luaL_checkinteger(L, 2);
+		int lane = luaL_checkinteger(L, 3) - 1;
+
+		game->PermanentlyHideTickObject(time, lane);
+		return 0;
 	}
 
 	int GetClearTransition(lua_State *L)

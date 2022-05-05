@@ -1164,8 +1164,11 @@ public:
 				NVG_FLUSH();
 
 			// Render foreground
-			if(m_foreground)
+			if (m_foreground)
+		    {
 				m_foreground->Render(deltaTime);
+                	glFlush();
+		    }
 
 			// Render Lua HUD
 			lua_getglobal(m_lua, "render");
