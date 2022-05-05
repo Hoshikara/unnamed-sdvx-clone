@@ -230,6 +230,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::GameplaySettingsDialogLastTab, 0);
 	Set(GameConfigKeys::SettingsLastTab, 0);
 	Set(GameConfigKeys::TransferScoresOnChartUpdate, true);
+    Set(GameConfigKeys::FastGUI, false);
 
 	Set(GameConfigKeys::CurrentProfileName, "Main");
 	Set(GameConfigKeys::UpdateChannel, "master");
