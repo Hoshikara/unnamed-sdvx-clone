@@ -233,6 +233,12 @@ void GameConfig::InitDefaults()
 
 	Set(GameConfigKeys::CurrentProfileName, "Main");
 	Set(GameConfigKeys::UpdateChannel, "master");
+
+#ifndef EMBEDDED
+	Set(GameConfigKeys::KeepFontTexture, true);
+#else
+	Set(GameConfigKeys::KeepFontTexture, false);
+#endif
 }
 
 void GameConfig::UpdateVersion()

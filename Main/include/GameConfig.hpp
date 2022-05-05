@@ -181,6 +181,8 @@ DefineEnum(GameConfigKeys,
 		   SettingsLastTab,
 		   TransferScoresOnChartUpdate,
 
+           KeepFontTexture,
+
 		   CurrentProfileName,
 
 		   // Gameplay options
