@@ -316,8 +316,8 @@ int lAddSkinTexture(lua_State* L) {
 
 int lAddSharedTexture(lua_State* L) {
 	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
-	auto key = luaL_checkstring(L, 2);
-	if (object->AddSharedTexture(luaL_checkstring(L, 1),key)) //Returns 1 on error
+		auto key = luaL_checkstring(L, 3);
+	if (object->AddSharedTexture(luaL_checkstring(L, 2),key)) //Returns 1 on error
 	{
 		return luaL_error(L, "Could not find shared texture with key: '%s'", *key);
 	}
