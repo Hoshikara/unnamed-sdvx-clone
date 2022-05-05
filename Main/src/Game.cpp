@@ -2083,7 +2083,7 @@ public:
 		if (!skipEffect) {
             int r = (int) rating;
 
-            if ((rating == ScoreHitRating::Perfect) && (abs(delta) <= 23)) {
+            if ((rating == ScoreHitRating::Perfect) && (abs(delta) <= (m_hitWindow.perfect / 2))) {
                 r = 4;
             }
 
