@@ -185,6 +185,7 @@ DefineEnum(GameConfigKeys,
 
 		   CurrentProfileName,
            FastGUI,
+           SkinDevMode,
 
 		   // Gameplay options
 		   GaugeType,

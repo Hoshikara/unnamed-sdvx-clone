@@ -592,6 +592,10 @@ protected:
 
 		SectionHeader("Game UI");
 
+        //TODO: Move these somewhere else?
+		ToggleSetting(GameConfigKeys::FastGUI, "Use Lightweight GUI (no skin)");
+		ToggleSetting(GameConfigKeys::SkinDevMode, "Skin Development Mode");
+
 		EnumSetting<Enum_ScoreDisplayModes>(GameConfigKeys::ScoreDisplayMode, "In-game score display is:");
 		ToggleSetting(GameConfigKeys::DisplayPracticeInfoInGame, "Show practice-mode info during gameplay");
 	}
