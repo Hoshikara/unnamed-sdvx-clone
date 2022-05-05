@@ -66,7 +66,7 @@ void Input::Init(Graphics::Window& wnd)
 		const auto deviceId = g_gameConfig.GetBlob<16>(GameConfigKeys::Controller_DeviceID);
 		int deviceIndex = -1;
 
-		for (size_t i = 0; i < m_window->GetNumGamepads(); i++)
+		for (int32 i = 0; i < m_window->GetNumGamepads(); i++)
 		{
 			auto id = SDL_JoystickGetDeviceGUID(i);
 			if (memcmp(deviceId.data(), id.data, 16) == 0)
