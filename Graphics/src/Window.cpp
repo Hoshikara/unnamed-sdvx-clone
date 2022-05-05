@@ -1,10 +1,7 @@
 #include "stdafx.h"
 #include "Window.hpp"
-#include "KeyMap.hpp"
 #include "Image.hpp"
 #include "Gamepad_Impl.hpp"
-
-#include <Shared/Rect.hpp>
 #include <Shared/Profiling.hpp>
 
 static void GetDisplayBounds(Vector<Shared::Recti>& bounds)
@@ -125,9 +122,9 @@ namespace Graphics
 			SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED_DISPLAY(monitorId), SDL_WINDOWPOS_CENTERED_DISPLAY(monitorId));
 		}
 
-		void ShowMessageBox(String title, String message, int severity)
+		void ShowMessageBox(const String& title, const String& message, int severity)
 		{
-			uint32 flags = 0;
+			uint32 flags;
 			switch (severity)
 			{
 			case 0:
@@ -141,7 +138,7 @@ namespace Graphics
 			}
 			SDL_ShowSimpleMessageBox(flags, title.c_str(), message.c_str(), m_window);
 		}
-		bool ShowYesNoMessage(String title, String message)
+		bool ShowYesNoMessage(const String& title, const String& message)
 		{
 			const SDL_MessageBoxButtonData buttons[] =
 				{
@@ -151,12 +148,12 @@ namespace Graphics
 			const SDL_MessageBoxData messageboxdata =
 				{
 					SDL_MESSAGEBOX_INFORMATION,
-					NULL,
+					nullptr,
 					*title,
 					*message,
 					SDL_arraysize(buttons),
 					buttons,
-					NULL};
+					nullptr};
 			int buttonid;
 			if (SDL_ShowMessageBox(&messageboxdata, &buttonid) < 0)
 			{
@@ -197,7 +194,7 @@ namespace Graphics
 		void HandleKeyEvent(const SDL_Keysym &keySym, uint8 newState, int32 repeat, int32 delta)
 		{
 			const SDL_Scancode code = keySym.scancode;
-			SDL_Keymod m = static_cast<SDL_Keymod>(keySym.mod);
+			auto m = static_cast<SDL_Keymod>(keySym.mod);
 
 			m_modKeys = ModifierKeys::None;
 
@@ -229,11 +226,11 @@ namespace Graphics
 		}
 
 		/* Window show hide, positioning, etc.*/
-		void Show()
+		void Show() const
 		{
 			SDL_ShowWindow(m_window);
 		}
-		void Hide()
+		void Hide() const
 		{
 			SDL_HideWindow(m_window);
 		}
@@ -244,7 +241,7 @@ namespace Graphics
 			SDL_SetWindowTitle(m_window, *titleUtf8);
 		}
 
-		void SetCursor(Ref<class ImageRes> image, Vector2i hotspot)
+		void SetCursor(const Ref<class ImageRes>& image, Vector2i hotspot)
 		{
 #ifdef _WIN32
 			if (currentCursor)
@@ -272,135 +269,144 @@ namespace Graphics
 		Timer t;
 		bool Update()
 		{
-            uint32 tick = SDL_GetTicks();
-			SDL_Event evt;
-			while (SDL_PollEvent(&evt))
-			{
+            static SDL_Event events[SIZE_EVENTS];
+			int eventCount;
 
-                int32 delta = tick - evt.common.timestamp;
-				if (evt.type == SDL_EventType::SDL_KEYDOWN)
+                SDL_PumpEvents();
+			Uint32 tick = SDL_GetTicks();
+			do
+			{
+				eventCount = SDL_PeepEvents(&events[0], SIZE_EVENTS, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT);
+				// Don't use range loop since it could loop through previously processed events from the previous loop
+				for (int i = 0; i < eventCount; ++i)
 				{
-					HandleKeyEvent(evt.key.keysym, 1, evt.key.repeat, delta);
-				}
+					auto evt = events[i];
+					int32 delta = tick - evt.common.timestamp;
+					if (evt.type == SDL_EventType::SDL_KEYDOWN)
+					{
+					    HandleKeyEvent(evt.key.keysym, 1, evt.key.repeat, delta);
+					}
 				else if (evt.type == SDL_EventType::SDL_KEYUP)
 				{
-					HandleKeyEvent(evt.key.keysym, 0, 0, delta);
-				}
+					    HandleKeyEvent(evt.key.keysym, 0, 0, delta);
+                }
 				else if (evt.type == SDL_EventType::SDL_JOYBUTTONDOWN)
-				{
-					Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
-					if (gp)
-						gp[0]->HandleInputEvent(evt.jbutton.button, true, delta);
-				}
-				else if (evt.type == SDL_EventType::SDL_JOYBUTTONUP)
-				{
-					Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
-					if (gp)
-						gp[0]->HandleInputEvent(evt.jbutton.button, false, delta);
-				}
+					{
+						Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
+						if (gp)
+							gp[0]->HandleInputEvent(evt.jbutton.button, true, delta);
+					}
+					else if (evt.type == SDL_EventType::SDL_JOYBUTTONUP)
+					{
+						Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
+						if (gp)
+							gp[0]->HandleInputEvent(evt.jbutton.button, false, delta);
+					}
 				else if (evt.type == SDL_EventType::SDL_JOYAXISMOTION)
-				{
-					Gamepad_Impl **gp = m_joystickMap.Find(evt.jaxis.which);
-					if (gp)
-						gp[0]->HandleAxisEvent(evt.jaxis.axis, evt.jaxis.value);
-				}
-				else if (evt.type == SDL_EventType::SDL_JOYHATMOTION)
-				{
-					Gamepad_Impl **gp = m_joystickMap.Find(evt.jhat.which);
-					if (gp)
-						gp[0]->HandleHatEvent(evt.jhat.hat, evt.jhat.value);
-				}
-				else if (evt.type == SDL_EventType::SDL_MOUSEBUTTONDOWN)
-				{
-					switch (evt.button.button)
 					{
-					case SDL_BUTTON_LEFT:
-						outer.OnMousePressed.Call(MouseButton::Left);
-						break;
-					case SDL_BUTTON_MIDDLE:
-						outer.OnMousePressed.Call(MouseButton::Middle);
-						break;
-					case SDL_BUTTON_RIGHT:
-						outer.OnMousePressed.Call(MouseButton::Right);
-						break;
+						Gamepad_Impl **gp = m_joystickMap.Find(evt.jaxis.which);
+						if (gp)
+							gp[0]->HandleAxisEvent(evt.jaxis.axis, evt.jaxis.value);
 					}
-				}
-				else if (evt.type == SDL_EventType::SDL_MOUSEBUTTONUP)
-				{
-					switch (evt.button.button)
+					else if (evt.type == SDL_EventType::SDL_JOYHATMOTION)
 					{
-					case SDL_BUTTON_LEFT:
-						outer.OnMouseReleased.Call(MouseButton::Left);
-						break;
-					case SDL_BUTTON_MIDDLE:
-						outer.OnMouseReleased.Call(MouseButton::Middle);
-						break;
-					case SDL_BUTTON_RIGHT:
-						outer.OnMouseReleased.Call(MouseButton::Right);
-						break;
+						Gamepad_Impl **gp = m_joystickMap.Find(evt.jhat.which);
+						if (gp)
+							gp[0]->HandleHatEvent(evt.jhat.hat, evt.jhat.value);
 					}
-				}
-				else if (evt.type == SDL_EventType::SDL_MOUSEWHEEL)
-				{
-					if (evt.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
+					else if (evt.type == SDL_EventType::SDL_MOUSEBUTTONDOWN)
 					{
-						outer.OnMouseScroll.Call(evt.wheel.y);
-					}
-					else
-					{
-						outer.OnMouseScroll.Call(-evt.wheel.y);
-					}
-				}
-				else if (evt.type == SDL_EventType::SDL_MOUSEMOTION)
-				{
-					outer.OnMouseMotion.Call(evt.motion.xrel, evt.motion.yrel);
-				}
-				else if (evt.type == SDL_EventType::SDL_QUIT)
-				{
-					m_closed = true;
-				}
-				else if (evt.type == SDL_EventType::SDL_WINDOWEVENT)
-				{
-					if (evt.window.windowID == SDL_GetWindowID(m_window))
-					{
-						if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED)
+						switch (evt.button.button)
 						{
-							Vector2i newSize(evt.window.data1, evt.window.data2);
-							outer.OnResized.Call(newSize);
+							case SDL_BUTTON_LEFT:
+								outer.OnMousePressed.Call(MouseButton::Left);
+								break;
+							case SDL_BUTTON_MIDDLE:
+								outer.OnMousePressed.Call(MouseButton::Middle);
+								break;
+							case SDL_BUTTON_RIGHT:
+								outer.OnMousePressed.Call(MouseButton::Right);
+								break;
 						}
-						else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_FOCUS_GAINED)
-						{
-							outer.OnFocusChanged.Call(true);
 						}
-						else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_FOCUS_LOST)
+					else if (evt.type == SDL_EventType::SDL_MOUSEBUTTONUP)
+					{
+						switch (evt.button.button)
 						{
-							outer.OnFocusChanged.Call(false);
+							case SDL_BUTTON_LEFT:
+								outer.OnMouseReleased.Call(MouseButton::Left);
+								break;
+							case SDL_BUTTON_MIDDLE:
+								outer.OnMouseReleased.Call(MouseButton::Middle);
+								break;
+							case SDL_BUTTON_RIGHT:
+								outer.OnMouseReleased.Call(MouseButton::Right);
+								break;
 						}
-                        else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_MOVED)
+						}
+					else if (evt.type == SDL_EventType::SDL_MOUSEWHEEL)
+					{
+						if (evt.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
 						{
-							Vector2i newPos(evt.window.data1, evt.window.data2);
-							outer.OnMoved.Call(newPos);
+							outer.OnMouseScroll.Call(evt.wheel.y);
+						}
+                        else
+						{
+							outer.OnMouseScroll.Call(-evt.wheel.y);
 						}
 					}
-				}
-				else if (evt.type == SDL_EventType::SDL_TEXTINPUT)
-				{
-					outer.OnTextInput.Call(evt.text.text);
-				}
-				else if (evt.type == SDL_EventType::SDL_TEXTEDITING)
-				{
-					SDL_Rect scr;
-					SDL_GetWindowPosition(m_window, &scr.x, &scr.y);
-					SDL_GetWindowSize(m_window, &scr.w, &scr.h);
-					SDL_SetTextInputRect(&scr);
+                    else if (evt.type == SDL_EventType::SDL_MOUSEMOTION)
+					{
+						outer.OnMouseMotion.Call(evt.motion.xrel, evt.motion.yrel);
+					}
+					else if (evt.type == SDL_EventType::SDL_QUIT)
+					{
+						m_closed = true;
+					}
+					else if (evt.type == SDL_EventType::SDL_WINDOWEVENT)
+					{
+						if (evt.window.windowID == SDL_GetWindowID(m_window))
+						{
+							if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED)
+							{
+								Vector2i newSize(evt.window.data1, evt.window.data2);
+								outer.OnResized.Call(newSize);
+							}
+							else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_FOCUS_GAINED)
+							{
+								outer.OnFocusChanged.Call(true);
+							}
+							else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_FOCUS_LOST)
+							{
+								outer.OnFocusChanged.Call(false);
+							}
+							else if (evt.window.event == SDL_WindowEventID::SDL_WINDOWEVENT_MOVED)
+							{
+								Vector2i newPos(evt.window.data1, evt.window.data2);
+								outer.OnMoved.Call(newPos);
+							}
+						}
+					}
+					else if (evt.type == SDL_EventType::SDL_TEXTINPUT)
+					{
+						outer.OnTextInput.Call(evt.text.text);
+					}
+					else if (evt.type == SDL_EventType::SDL_TEXTEDITING)
+					{
+						SDL_Rect scr;
+						SDL_GetWindowPosition(m_window, &scr.x, &scr.y);
+						SDL_GetWindowSize(m_window, &scr.w, &scr.h);
+						SDL_SetTextInputRect(&scr);
 
-					m_textComposition.composition = evt.edit.text;
-					m_textComposition.cursor = evt.edit.start;
-					m_textComposition.selectionLength = evt.edit.length;
-					outer.OnTextComposition.Call(m_textComposition);
+						m_textComposition.composition = evt.edit.text;
+						m_textComposition.cursor = evt.edit.start;
+						m_textComposition.selectionLength = evt.edit.length;
+						outer.OnTextComposition.Call(m_textComposition);
+					}
+					outer.OnAnyEvent.Call(evt);
 				}
-				outer.OnAnyEvent.Call(evt);
 			}
+            while (eventCount == SIZE_EVENTS);
 			return !m_closed;
 		}
 
@@ -533,7 +539,6 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 							if (bounds[i].Contains(windowRect))
 							{
 								foundContained = true;
-								monitorId = i;
 								break;
 							}
 
@@ -558,8 +563,6 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 					}
 
 					adjustedRect.pos = bounds[monitorId].pos + (bounds[monitorId].size - adjustedRect.size) / 2;
-
-					windowPos = adjustedRect.pos + Vector2i{ borderLeft, borderTop };
 					windowSize = adjustedRect.size - Vector2i{ borderLeft+borderRight, borderTop+borderBottom };
 
 					SetWindowSize(windowSize);
@@ -583,7 +586,6 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 
 		// Window Input State
 		Map<SDL_Scancode, uint8> m_keyStates;
-		KeyMap m_keyMapping;
 		ModifierKeys m_modKeys = ModifierKeys::None;
 
 		// Gamepad input
@@ -598,7 +600,6 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 		bool m_closed = false;
 
 		bool m_fullscreen = false;
-        bool m_windowedFullscreen = false;
 		uint32 m_style;
 		Vector2i m_clntSize;
 		WString m_caption;
@@ -643,7 +644,7 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 		SDL_GetMouseState(&res.x, &res.y);
 		return res;
 	}
-	void Window::SetCursor(Ref<class ImageRes> image, Vector2i hotspot /*= Vector2i(0,0)*/)
+	void Window::SetCursor(const Ref<class ImageRes>& image, Vector2i hotspot /*= Vector2i(0,0)*/)
 	{
 		m_impl->SetCursor(image, hotspot);
 	}
@@ -711,12 +712,12 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 		return m_impl->m_textComposition;
 	}
 
-	void Window::ShowMessageBox(String title, String message, int severity)
+	void Window::ShowMessageBox(const String& title, const String& message, int severity)
 	{
 		m_impl->ShowMessageBox(title, message, severity);
 	}
 
-	bool Window::ShowYesNoMessage(String title, String message)
+    bool Window::ShowYesNoMessage(const String& title, const String& message)
 	{
 		return m_impl->ShowYesNoMessage(title, message);
 	}
@@ -760,7 +761,7 @@ int borderTop = 0, borderLeft = 0, borderBottom = 0, borderRight = 0;
 			return Utility::CastRef<Gamepad_Impl, Gamepad>(*openGamepad);
 		Ref<Gamepad_Impl> newGamepad;
 
-		Gamepad_Impl *gamepadImpl = new Gamepad_Impl();
+		auto *gamepadImpl = new Gamepad_Impl();
 		// Try to initialize new device
 		if (gamepadImpl->Init(this, deviceIndex))
 		{
