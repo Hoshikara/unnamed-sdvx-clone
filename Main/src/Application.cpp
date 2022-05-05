@@ -2392,7 +2392,7 @@ int lLoadSharedSkinTexture(lua_State* L) {
 	path = Path::Absolute(path);
 
 	newTexture->nvgTexture = nvgCreateImage(g_guiState.vg, path.c_str(), imageflags);
-	newTexture->texture = g_application->LoadTexture(path, true);
+	newTexture->texture = g_application->LoadTexture(filename, false);
 
 	if (newTexture->Valid())
 	{

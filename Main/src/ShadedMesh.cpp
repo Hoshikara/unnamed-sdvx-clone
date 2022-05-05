@@ -82,6 +82,7 @@ int ShadedMesh::AddSharedTexture(const String& name, const String& key)
 	{
 		auto& t = g_application->sharedTextures.at(key);
 		m_textures.Add(name, t->texture);
+        SetParam(name, t->texture);
 		return 0;
 	}
 	else {
