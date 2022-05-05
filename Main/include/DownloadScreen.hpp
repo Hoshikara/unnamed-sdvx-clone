@@ -49,6 +49,7 @@ private:
 	int m_Exit(struct lua_State* L);
 	int m_DownloadArchive(struct lua_State* L);
 	int m_PlayPreview(struct lua_State* L);
+    int m_StopPreview(struct lua_State* L);
 	int m_GetSongsPath(struct lua_State* L);
 	bool m_extractFile(struct archive* a, String path);
 	Map<String, String> m_mapFromLuaTable(int index);

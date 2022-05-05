@@ -41,6 +41,7 @@ bool DownloadScreen::Init()
 	m_bindable->AddFunction("Exit", this, &DownloadScreen::m_Exit);
 	m_bindable->AddFunction("DownloadArchive", this, &DownloadScreen::m_DownloadArchive);
 	m_bindable->AddFunction("PlayPreview", this, &DownloadScreen::m_PlayPreview);
+    m_bindable->AddFunction("StopPreview", this, &DownloadScreen::m_StopPreview);
 	m_bindable->AddFunction("GetSongsPath", this, &DownloadScreen::m_GetSongsPath);
 	m_bindable->Push();
 	lua_settop(m_lua, 0);
@@ -483,5 +484,11 @@ int DownloadScreen::m_PlayPreview(lua_State* L)
 		m_previewPlayer.FadeTo(Ref<AudioStream>());
 	}
 
+	return 0;
+}
+
+int DownloadScreen::m_StopPreview(lua_State* L)
+{
+	m_previewPlayer.FadeTo(Ref<AudioStream>());
 	return 0;
 }
