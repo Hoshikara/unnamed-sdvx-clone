@@ -57,6 +57,7 @@ DefineEnum(GameConfigKeys,
 		//    LaserChangeExponent,
 		   GaugeDrainNormal,
 		   GaugeDrainHalf,
+           ResponsiveInputs,
 
 		   EnableHiddenSudden,
 		   HiddenCutoff,

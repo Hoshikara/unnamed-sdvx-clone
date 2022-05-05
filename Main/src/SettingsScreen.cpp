@@ -738,6 +738,7 @@ protected:
 
 		SectionHeader("Render");
 
+        SetApply(ToggleSetting(GameConfigKeys::ResponsiveInputs, "Responsive Inputs (CPU intensive)"));
         SetApply(ToggleSetting(GameConfigKeys::Fullscreen, "Fullscreen"));
 		SetApply(ToggleSetting(GameConfigKeys::WindowedFullscreen, "Use windowed fullscreen"));
 

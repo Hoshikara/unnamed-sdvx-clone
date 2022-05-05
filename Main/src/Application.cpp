@@ -108,6 +108,7 @@ void Application::ApplySettings()
 	Logger::Get().SetLogLevel(g_gameConfig.GetEnum<Logger::Enum_Severity>(GameConfigKeys::LogLevel));
 	g_gameWindow->SetVSync(g_gameConfig.GetBool(GameConfigKeys::VSync) ? 1 : 0);
 	m_showFps = g_gameConfig.GetBool(GameConfigKeys::ShowFps);
+    m_responsiveInputs = g_gameConfig.GetBool(GameConfigKeys::ResponsiveInputs);
 
     m_UpdateWindowPosAndShape();
 	m_OnWindowResized(g_gameWindow->GetWindowSize());
@@ -1036,6 +1037,7 @@ bool Application::m_Init()
 		m_fontBakeThread = Thread(BasicNuklearGui::BakeFontWithLock);
 	}
 
+    m_responsiveInputs = g_gameConfig.GetBool(GameConfigKeys::ResponsiveInputs);
     renderSema = SDL_CreateSemaphore(0);
 	m_renderThread = Thread(threadedRenderer);
 
@@ -1176,14 +1178,20 @@ void Application::m_Tick()
 	// Not minimized / Valid resolution
 	if (g_resolution.x > 0 && g_resolution.y > 0)
 	{
-		rendering.store(true);
-		g_gl->ReleaseCurrent();
-		SDL_SemPost(renderSema);
-		while (rendering.load()) {
-			SDL_PumpEvents();
-			std::this_thread::yield();
+		if (m_responsiveInputs)
+		{
+			rendering.store(true);
+			g_gl->ReleaseCurrent();
+			SDL_SemPost(renderSema);
+			while (rendering.load()) {
+				SDL_PumpEvents();
+				std::this_thread::yield();
+			}
+			g_gl->MakeCurrent();
 		}
-        g_gl->MakeCurrent();
+		else {
+			RenderTickables();
+		}
 	}
 
 	if (m_needSkinReload)
