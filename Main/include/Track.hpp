@@ -130,6 +130,7 @@ public:
 
     void OnHoldEnter(Input::Button buttonCode);
     void OnButtonReleased(Input::Button buttonCode);
+	void OnButtonReleasedDetla(Input::Button buttonCode, int32 delta);
 
 	// Laser positions, as shown on the overlay
 	float laserPositions[2];

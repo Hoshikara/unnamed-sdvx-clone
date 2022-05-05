@@ -29,8 +29,8 @@ public:
 	void Tick(float deltaTime) override;
 	void Render(float deltaTime) override;
 
-	void OnKeyPressed(SDL_Scancode code) override;
-	void OnKeyReleased(SDL_Scancode code) override;
+	void OnKeyPressed(SDL_Scancode code, int32 delta) override;
+	void OnKeyReleased(SDL_Scancode code, int32 delta) override;
 private:
 	struct lua_State* m_lua;
 	LuaBindable* m_bindable;
@@ -42,8 +42,8 @@ private:
 	bool m_running = true;
 
 	void m_ArchiveLoop();
-	void m_OnButtonPressed(Input::Button buttonCode);
-	void m_OnButtonReleased(Input::Button buttonCode);
+	void m_OnButtonPressed(Input::Button buttonCode, int32 delta);
+	void m_OnButtonReleased(Input::Button buttonCode, int32 delta);
 	void m_OnMouseScroll(int32 steps);
 	void m_ProcessArchiveResponses();
 	int m_Exit(struct lua_State* L);

@@ -49,7 +49,7 @@ public:
 			}
 		}
 	}
-	void OnKeyPressed(SDL_Scancode code)
+	void OnKeyPressed(SDL_Scancode code, int32 delta)
 	{
 		SDL_Keycode key = SDL_GetKeyFromScancode(code);
 		if (key == SDLK_v)

@@ -2321,7 +2321,7 @@ public:
 		}
 	}
 
-	void OnKeyPressed(SDL_Scancode code) override
+	void OnKeyPressed(SDL_Scancode code, int32 delta) override
 	{
 		if (!m_isPracticeSetup && g_gameConfig.GetBool(GameConfigKeys::DisableNonButtonInputsDuringPlay))
 			return;
@@ -2402,7 +2402,7 @@ public:
 		}
 	}
 
-	void OnKeyReleased(SDL_Scancode code) override
+	void OnKeyReleased(SDL_Scancode code, int32 delta) override
 	{
 		if (m_practiceSetupDialog && m_practiceSetupDialog->IsActive())
 			return;
@@ -2431,11 +2431,11 @@ public:
 			FinishGame();
 		}
 	}
-    void m_OnButtonReleased(Input::Button buttonCode) {
+    void m_OnButtonReleased(Input::Button buttonCode, int32 delta) {
 		m_releaseTimes[(size_t)buttonCode] = SDL_GetTicks();
 	}
 
-	void m_OnButtonPressed(Input::Button buttonCode)
+	void m_OnButtonPressed(Input::Button buttonCode, int32 delta)
 	{
         m_pressTimes[(size_t)buttonCode] = SDL_GetTicks();
 

@@ -48,8 +48,8 @@ public:
 	MouseLockHandle LockMouse();
 
 	// Event handlers
-	virtual void OnKeyPressed(SDL_Scancode code);
-	virtual void OnKeyReleased(SDL_Scancode code);
+	virtual void OnKeyPressed(SDL_Scancode code, int32 delta);
+	virtual void OnKeyReleased(SDL_Scancode code, int32 delta);
 	virtual void OnMouseMotion(int32 x, int32 y);
 
 	// Request laser input state
@@ -62,16 +62,16 @@ public:
 	static double CalculateSensFromPpr(double ppr);
 
 	// Button delegates
-	Delegate<Button> OnButtonPressed;
-	Delegate<Button> OnButtonReleased;
+	Delegate<Button, int32> OnButtonPressed;
+	Delegate<Button, int32> OnButtonReleased;
 
 private:
 	void m_InitKeyboardMapping();
 	void m_InitControllerMapping();
-	void m_OnButtonInput(Button b, bool pressed);
+	void m_OnButtonInput(Button b, bool pressed, int32 delta);
 
-	void m_OnGamepadButtonPressed(uint8 button);
-	void m_OnGamepadButtonReleased(uint8 button);
+	void m_OnGamepadButtonPressed(uint8 button, int32 delta);
+	void m_OnGamepadButtonReleased(uint8 button, int32 delta);
 
     static const double mouseSensVars[3];
 

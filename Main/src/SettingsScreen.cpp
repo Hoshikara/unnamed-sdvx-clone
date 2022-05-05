@@ -1258,7 +1258,7 @@ public:
 		g_application->FastText(prompt, static_cast<float>(g_resolution.x / 2), static_cast<float>(g_resolution.y / 2), 40, NVGalign::NVG_ALIGN_CENTER | NVGalign::NVG_ALIGN_MIDDLE);
 	}
 
-	void OnButtonPressed(uint8 key)
+	void OnButtonPressed(uint8 key, int32 delta)
 	{
 		if (!m_knobs)
 		{
@@ -1404,7 +1404,7 @@ public:
 		}
 	}
 
-	void OnButtonPressed(Input::Button button)
+	void OnButtonPressed(Input::Button button, int32 delta)
 	{
 		if (button == Input::Button::BT_S)
 		{

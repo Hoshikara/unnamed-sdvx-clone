@@ -134,8 +134,8 @@ namespace Graphics
 		// Open a gamepad within the range of the number of gamepads
 		Ref<Gamepad> OpenGamepad(int32 deviceIndex);
 
-		Delegate<SDL_Scancode> OnKeyPressed;
-		Delegate<SDL_Scancode> OnKeyReleased;
+		Delegate<SDL_Scancode, int32> OnKeyPressed;
+		Delegate<SDL_Scancode, int32> OnKeyReleased;
 		Delegate<MouseButton> OnMousePressed;
 		Delegate<MouseButton> OnMouseReleased;
 		Delegate<int32, int32> OnMouseMotion;

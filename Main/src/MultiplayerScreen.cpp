@@ -66,7 +66,7 @@ public:
 			}
 		}
 	}
-	void OnKeyPressed(SDL_Scancode code)
+	void OnKeyPressed(SDL_Scancode code, int32 delta)
 	{
 		SDL_Keycode key = SDL_GetKeyFromScancode(code);
 		if (key == SDLK_v)
@@ -1077,7 +1077,7 @@ void MultiplayerScreen::OnSearchStatusUpdated(String status)
 	m_statusLock.unlock();
 }
 
-void MultiplayerScreen::OnKeyPressed(SDL_Scancode code)
+void MultiplayerScreen::OnKeyPressed(SDL_Scancode code, int32 delta)
 {
 	if (IsSuspended() || m_settDiag.IsActive())
 		return;
@@ -1153,7 +1153,7 @@ void MultiplayerScreen::OnKeyPressed(SDL_Scancode code)
 
 
 
-void MultiplayerScreen::OnKeyReleased(SDL_Scancode code)
+void MultiplayerScreen::OnKeyReleased(SDL_Scancode code, int32 delta)
 {
 	if (IsSuspended() || m_chatOverlay->IsOpen() || m_settDiag.IsActive())
 		return;
@@ -1171,7 +1171,7 @@ void MultiplayerScreen::OnKeyReleased(SDL_Scancode code)
 	lua_settop(m_lua, 0);
 }
 
-void MultiplayerScreen::m_OnButtonPressed(Input::Button buttonCode)
+void MultiplayerScreen::m_OnButtonPressed(Input::Button buttonCode, int32 delta)
 {
 	if (IsSuspended() || m_settDiag.IsActive())
 		return;
@@ -1247,7 +1247,7 @@ void MultiplayerScreen::m_OnButtonPressed(Input::Button buttonCode)
 	m_buttonPressed[buttonCode] = true;
 }
 
-void MultiplayerScreen::m_OnButtonReleased(Input::Button buttonCode)
+void MultiplayerScreen::m_OnButtonReleased(Input::Button buttonCode, int32 delta)
 {
 	if (IsSuspended() || m_chatOverlay->IsOpen() || m_settDiag.IsActive())
 		return;

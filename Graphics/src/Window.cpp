@@ -194,7 +194,7 @@ namespace Graphics
 		}
 
 		/* input handling */
-		void HandleKeyEvent(const SDL_Keysym &keySym, uint8 newState, int32 repeat)
+		void HandleKeyEvent(const SDL_Keysym &keySym, uint8 newState, int32 repeat, int32 delta)
 		{
 			const SDL_Scancode code = keySym.scancode;
 			SDL_Keymod m = static_cast<SDL_Keymod>(keySym.mod);
@@ -215,11 +215,11 @@ namespace Graphics
 				currentState = newState;
 				if (newState == 1)
 				{
-					outer.OnKeyPressed.Call(code);
+					outer.OnKeyPressed.Call(code, delta);
 				}
 				else
 				{
-					outer.OnKeyReleased.Call(code);
+					outer.OnKeyReleased.Call(code, delta);
 				}
 			}
 			if (currentState == 1)
@@ -272,28 +272,31 @@ namespace Graphics
 		Timer t;
 		bool Update()
 		{
+            uint32 tick = SDL_GetTicks();
 			SDL_Event evt;
 			while (SDL_PollEvent(&evt))
 			{
+
+                int32 delta = tick - evt.common.timestamp;
 				if (evt.type == SDL_EventType::SDL_KEYDOWN)
 				{
-					HandleKeyEvent(evt.key.keysym, 1, evt.key.repeat);
+					HandleKeyEvent(evt.key.keysym, 1, evt.key.repeat, delta);
 				}
 				else if (evt.type == SDL_EventType::SDL_KEYUP)
 				{
-					HandleKeyEvent(evt.key.keysym, 0, 0);
+					HandleKeyEvent(evt.key.keysym, 0, 0, delta);
 				}
 				else if (evt.type == SDL_EventType::SDL_JOYBUTTONDOWN)
 				{
 					Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
 					if (gp)
-						gp[0]->HandleInputEvent(evt.jbutton.button, true);
+						gp[0]->HandleInputEvent(evt.jbutton.button, true, delta);
 				}
 				else if (evt.type == SDL_EventType::SDL_JOYBUTTONUP)
 				{
 					Gamepad_Impl **gp = m_joystickMap.Find(evt.jbutton.which);
 					if (gp)
-						gp[0]->HandleInputEvent(evt.jbutton.button, false);
+						gp[0]->HandleInputEvent(evt.jbutton.button, false, delta);
 				}
 				else if (evt.type == SDL_EventType::SDL_JOYAXISMOTION)
 				{

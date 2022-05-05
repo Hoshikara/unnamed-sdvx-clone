@@ -877,7 +877,7 @@ public:
 		}
 	}
 
-	void m_OnButtonPressed(Input::Button buttonCode)
+	void m_OnButtonPressed(Input::Button buttonCode, int32 delta)
 	{
 		//if (m_multiplayer && m_multiplayer->GetChatOverlay()->IsOpen())
 		if (m_suspended || m_settDiag.IsActive())
@@ -959,7 +959,7 @@ public:
 		}
 	}
 
-	void m_OnButtonReleased(Input::Button buttonCode)
+	void m_OnButtonReleased(Input::Button buttonCode, int32 delta)
 	{
 		//if (m_multiplayer && m_multiplayer->GetChatOverlay()->IsOpen())
 		if (m_suspended || m_settDiag.IsActive())
@@ -1010,7 +1010,7 @@ public:
 		}
 	}
 
-	virtual void OnKeyPressed(SDL_Scancode code)
+	virtual void OnKeyPressed(SDL_Scancode code, int32 delta)
 	{
 		//if (m_multiplayer && m_multiplayer->GetChatOverlay()->OnKeyPressedConsume(code))
 
@@ -1109,7 +1109,7 @@ public:
 		}
 	}
 
-	virtual void OnKeyReleased(SDL_Scancode code)
+	virtual void OnKeyReleased(SDL_Scancode code, int32 delta)
 	{
 	}
 
