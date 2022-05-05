@@ -256,20 +256,20 @@ float Scoring::GetLaserRollOutput(uint32 index)
 	{
 		return GetLaserPosition(index, laserTargetPositions[index]);
 	}
-	else // Check if any upcoming lasers are within 2 beats
-	{
-		for (auto l : m_laserSegmentQueue)
-		{
-			if (l->index == index && m_IsRoot(l))
-			{
-				if (l->time - m_playback->GetLastTime() <= m_playback->GetCurrentTimingPoint().beatDuration * 2)
-				{
-					return GetLaserPosition(index, l->points[0]);
-				}
-			}
-		}
+	// else // Check if any upcoming lasers are within 2 beats
+	// {
+	// 	for (auto l : m_laserSegmentQueue)
+	// 	{
+	// 		if (l->index == index && m_IsRoot(l))
+	// 		{
+	// 			if (l->time - m_playback->GetLastTime() <= m_playback->GetCurrentTimingPoint().beatDuration * 2)
+	// 			{
+	// 				return GetLaserPosition(index, l->points[0]);
+	// 			}
+	// 		}
+	// 	}
 			
-	}
+	// }
 	return 0.0f;
 }
 
