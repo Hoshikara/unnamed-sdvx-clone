@@ -76,9 +76,6 @@ DefineEnum(GameConfigKeys,
 
 		   LeadInTime,
 		   PracticeLeadInTime,
-		   PracticeSetupNavEnabled,
-		   RevertToSetupAfterScoreScreen,
-		   DisplayPracticeInfoInGame,
 
 		   // Input device setting per element
 		   LaserInputDevice,
@@ -168,6 +165,30 @@ DefineEnum(GameConfigKeys,
 		   CheckForUpdates,
 		   OnlyRelease,
 		   LimitSettingsFont,
+
+           // Practice Mode
+		   PracticeSetupNavEnabled,
+		   RevertToSetupAfterScoreScreen,
+		   DisplayPracticeInfoInGame,
+
+		   DefaultPlaybackSpeed,
+		   DefaultLoopOnSuccess,
+		   DefaultLoopOnFail,
+		   DefaultIncSpeedOnSuccess,
+		   DefaultIncSpeedAmount,
+		   DefaultIncStreak,
+		   DefaultDecSpeedOnFail,
+		   DefaultDecSpeedAmount,
+		   DefaultMinPlaybackSpeed,
+		   DefaultEnableMaxRewind,
+		   DefaultMaxRewindMeasure,
+
+		   DefaultFailConditionType,
+		   DefaultFailConditionScore,
+		   DefaultFailConditionGrade,
+		   DefaultFailConditionMiss,
+		   DefaultFailConditionMissNear,
+		   DefaultFailConditionGauge,
 
 		   // Multiplayer
 		   MultiplayerHost,
