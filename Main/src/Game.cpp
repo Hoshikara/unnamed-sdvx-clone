@@ -865,16 +865,11 @@ public:
 			Vector2 critPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(0, 0, 0)));
 			Vector2 leftPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(-m_track->trackWidth / 2.0, 0, 0)));
 			Vector2 rightPos = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3(m_track->trackWidth / 2.0, 0, 0)));
-			Vector2 line = rightPos - leftPos;
-
-
 
 			for (size_t i = 0; i < 2; i++)
 			{
 #define TPOINT(name, y) Vector2 name = m_camera.Project(m_camera.critOrigin.TransformPoint(Vector3((m_scoring.laserPositions[i] - Track::trackWidth * 0.5f) * (5.0f / 6), y, 0)))
 				TPOINT(cPos, 0);
-				TPOINT(cPosUp, 1);
-				TPOINT(cPosDown, -1);
 #undef TPOINT
 
 				float distFromCritCenter = (critPos - cPos).Length() * (m_scoring.laserPositions[i] < 0.5 ? -1 : 1);
