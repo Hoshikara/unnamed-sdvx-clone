@@ -29,7 +29,8 @@ void Input::Init(Graphics::Window& wnd)
 
 	m_mouseAxisMapping[0] = g_gameConfig.GetInt(GameConfigKeys::Mouse_Laser0Axis);
 	m_mouseAxisMapping[1] = g_gameConfig.GetInt(GameConfigKeys::Mouse_Laser1Axis);
-	m_mouseSensitivity = g_gameConfig.GetFloat(GameConfigKeys::Mouse_Sensitivity);
+
+    m_mouseSensitivity = CalculateRealMouseSens(g_gameConfig.GetFloat(GameConfigKeys::Mouse_Sensitivity));
 
 	m_controllerAxisMapping[0] = g_gameConfig.GetInt(GameConfigKeys::Controller_Laser0Axis);
 	m_controllerAxisMapping[1] = g_gameConfig.GetInt(GameConfigKeys::Controller_Laser1Axis);
@@ -288,6 +289,29 @@ float Input::GetAbsoluteInputLaserDir(uint32 laserIdx)
 {
 	return m_rawLaserStates[laserIdx];
 }
+
+//To give the sensitivity slider a good feel and put reasonable sensitivities in a reasonable range.
+const double Input::mouseSensVars[] = { 20.0, 0.1, 1.2 };
+
+double Input::CalculateSensFromPpr(double ppr)
+{
+	double pprSign = Math::Sign(ppr);
+
+	return pprSign * (mouseSensVars[0] / mouseSensVars[1]) / pow(fabs(ppr), 1.0 / mouseSensVars[2]);
+}
+
+double Input::CalculateRealMouseSens(double sensSetting)
+{
+	double sensSign = Math::Sign(sensSetting);
+	double ppr = EstimatePprFromSens(abs(sensSetting));
+	return sensSign * 6.0 / (ppr);
+}
+
+double Input::EstimatePprFromSens(double sens)
+{
+	return pow(mouseSensVars[0] / (fmax(sens, 0.001) * mouseSensVars[1]), mouseSensVars[2]);
+}
+
 void Input::m_InitKeyboardMapping()
 {
 	memset(m_buttonStates, 0, sizeof(m_buttonStates));

@@ -57,6 +57,9 @@ public:
 
 	// Request laser input state without sensitivity applied
 	float GetAbsoluteInputLaserDir(uint32 laserIdx);
+    static double CalculateRealMouseSens(double sensSetting);
+	static double EstimatePprFromSens(double sens);
+	static double CalculateSensFromPpr(double ppr);
 
 	// Button delegates
 	Delegate<Button> OnButtonPressed;
@@ -69,6 +72,8 @@ private:
 
 	void m_OnGamepadButtonPressed(uint8 button);
 	void m_OnGamepadButtonReleased(uint8 button);
+
+    static const double mouseSensVars[3];
 
 	int32 m_mouseLockIndex = 0;
 	Vector<MouseLockHandle> m_mouseLocks;
