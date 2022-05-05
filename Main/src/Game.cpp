@@ -1378,7 +1378,7 @@ public:
 			}
             else
 			{
-				m_fxSamples[i]->SetVolume(m_fxVolume);
+				m_fxSamples[i]->SetVolume(m_fxVolume * m_slamVolume);
 			}
 		}
 

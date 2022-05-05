@@ -729,7 +729,7 @@ protected:
 		SectionHeader("Audio");
 
 		PercentSetting(GameConfigKeys::MasterVolume, "Master volume (%.1f%%):");
-        PercentSetting(GameConfigKeys::SlamVolume, "Slam/Chip volume (%.1f%%):");
+        PercentSetting(GameConfigKeys::SlamVolume, "Slam/Clap volume (%.1f%%):");
 		ToggleSetting(GameConfigKeys::MuteUnfocused, "Mute the game when unfocused");
 #ifdef _WIN32
 		ToggleSetting(GameConfigKeys::WASAPI_Exclusive, "WASAPI exclusive mode (requires restart)");
