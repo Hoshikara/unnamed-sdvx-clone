@@ -1298,6 +1298,7 @@ void Application::m_Cleanup()
 		delete img.second;
 	}
 
+    sharedTextures.clear();
 	// Clear fonts before freeing library
 
 	for (auto &f : g_guiState.fontCahce)
@@ -1618,6 +1619,7 @@ void Application::ReloadSkin()
 	g_guiState.nextPaintId.clear();
 	g_guiState.paintCache.clear();
 	m_jacketImages.clear();
+    sharedTextures.clear();
 
 	for (auto &sample : m_samples)
 	{
@@ -2350,6 +2352,73 @@ static int lGetSkinSetting(lua_State *L /*String key*/)
 	}
 }
 
+int lLoadSharedTexture(lua_State* L) {
+	Ref<SharedTexture> newTexture = Utility::MakeRef(new SharedTexture());
+
+
+	const auto key = luaL_checkstring(L, 1);
+	const auto path = luaL_checkstring(L, 2);
+	int imageflags = 0;
+	if (lua_isinteger(L, 3)) {
+		imageflags = luaL_checkinteger(L, 3);
+	}
+
+	newTexture->nvgTexture = nvgCreateImage(g_guiState.vg, path, imageflags);
+	newTexture->texture = g_application->LoadTexture(path, true);
+
+	if (newTexture->Valid())
+	{
+		g_application->sharedTextures.Add(key, newTexture);
+	}
+	else {
+		lua_pushstring(L, *Utility::Sprintf("Failed to load shared texture with path: '%s', key: '%s'", path, key));
+		return lua_error(L);
+	}
+
+	return 0;
+}
+
+int lLoadSharedSkinTexture(lua_State* L) {
+	Ref<SharedTexture> newTexture = Utility::MakeRef(new SharedTexture());
+	const auto key = luaL_checkstring(L, 1);
+	const auto filename = luaL_checkstring(L, 2);
+	int imageflags = 0;
+	if (lua_isinteger(L, 3)) {
+		imageflags = luaL_checkinteger(L, 3);
+	}
+
+
+	String path = "skins/" + g_application->GetCurrentSkin() + "/textures/" + filename;
+	path = Path::Absolute(path);
+
+	newTexture->nvgTexture = nvgCreateImage(g_guiState.vg, path.c_str(), imageflags);
+	newTexture->texture = g_application->LoadTexture(path, true);
+
+	if (newTexture->Valid())
+	{
+		g_application->sharedTextures.Add(key, newTexture);
+	}
+	else {
+		return luaL_error(L, "Failed to load shared texture with path: '%s', key: '%s'", *path, *key);
+	}
+
+	return 0;
+}
+
+int lGetSharedTexture(lua_State* L) {
+	const auto key = luaL_checkstring(L, 1);
+
+	if (g_application->sharedTextures.Contains(key))
+	{
+		auto& t = g_application->sharedTextures.at(key);
+		lua_pushnumber(L, t->nvgTexture);
+		return 1;
+	}
+
+
+	return 0;
+}
+
 void Application::SetLuaBindings(lua_State *state)
 {
 	auto pushFuncToTable = [&](const char *name, int (*func)(lua_State *)) {
@@ -2436,6 +2505,9 @@ void Application::SetLuaBindings(lua_State *state)
 		pushFuncToTable("SetImageTint", lSetImageTint);
 		pushFuncToTable("LoadAnimation", lLoadAnimation);
 		pushFuncToTable("LoadSkinAnimation", lLoadSkinAnimation);
+        pushFuncToTable("LoadSharedTexture", lLoadSharedTexture);
+		pushFuncToTable("LoadSharedSkinTexture", lLoadSharedSkinTexture);
+		pushFuncToTable("GetSharedTexture", lGetSharedTexture);
 		pushFuncToTable("TickAnimation", lTickAnimation);
 		pushFuncToTable("ResetAnimation", lResetAnimation);
 		pushFuncToTable("GlobalCompositeOperation", lGlobalCompositeOperation);
@@ -2605,4 +2677,14 @@ void JacketLoadingJob::Finalize()
 		target->texture = nvgCreateImageRGBA(g_guiState.vg, loadedImage->GetSize().x, loadedImage->GetSize().y, 0, (unsigned char *)loadedImage->GetBits());
 		target->loaded = true;
 	}
+}
+
+SharedTexture::~SharedTexture()
+{
+	nvgDeleteImage(g_guiState.vg, nvgTexture);
+}
+
+bool SharedTexture::Valid()
+{
+	return nvgTexture != 0 && texture;
 }

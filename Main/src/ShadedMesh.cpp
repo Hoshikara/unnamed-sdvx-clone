@@ -76,6 +76,20 @@ void ShadedMesh::AddSkinTexture(const String& name, const String& file) {
 	SetParam(name, newTex);
 }
 
+int ShadedMesh::AddSharedTexture(const String& name, const String& key)
+{
+	if (g_application->sharedTextures.Contains(key))
+	{
+		auto& t = g_application->sharedTextures.at(key);
+		m_textures.Add(name, t->texture);
+		return 0;
+	}
+	else {
+		return 1;
+	}
+
+}
+
 void ShadedMesh::SetBlendMode(const MaterialBlendMode& mode)
 {
 	m_material->blendMode = mode;
@@ -300,6 +314,17 @@ int lAddSkinTexture(lua_State* L) {
 	return 0;
 }
 
+int lAddSharedTexture(lua_State* L) {
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	auto key = luaL_checkstring(L, 2);
+	if (object->AddSharedTexture(luaL_checkstring(L, 1),key)) //Returns 1 on error
+	{
+		return luaL_error(L, "Could not find shared texture with key: '%s'", *key);
+	}
+
+	return 0;
+}
+
 int lSetBlendMode(lua_State* L) {
 	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	MaterialBlendMode mode = (MaterialBlendMode)luaL_checkinteger(L, 2);
@@ -401,6 +426,7 @@ int __index(lua_State* L) {
 	fmap.Add("Draw", lDraw);
 	fmap.Add("AddTexture", lAddTexture);
 	fmap.Add("AddSkinTexture", lAddSkinTexture);
+    fmap.Add("AddSharedTexture", lAddSharedTexture);
 	fmap.Add("SetParam", lSetParam);
 	fmap.Add("SetParamVec2", lSetParamVec2);
 	fmap.Add("SetParamVec3", lSetParamVec3);
