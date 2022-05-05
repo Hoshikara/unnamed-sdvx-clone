@@ -24,7 +24,7 @@ private:
 	int m_scoreDisplay;
 	int m_scoreTarget;
 	float m_comboScale;
-	int m_combo = 0;
+	uint32 m_combo = 0;
 	Graphics::Text m_title;
 	Graphics::Text m_artist;
 	Graphics::Text m_alertText[2];
