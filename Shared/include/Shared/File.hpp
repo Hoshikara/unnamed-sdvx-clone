@@ -25,6 +25,9 @@ public:
 	size_t Read(void* data, size_t len);
 	size_t Write(const void* data, size_t len);
 
+    // Get the last write time of the file
+	uint64 GetLastWriteTime() const;
+
 	// Get the last write time of a file at a given path
 	static uint64 GetLastWriteTime(const String& path);
     static uint64 FileTimeToUnixTimestamp(uint64 fileTime);
