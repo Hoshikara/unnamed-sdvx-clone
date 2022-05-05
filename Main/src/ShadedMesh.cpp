@@ -319,7 +319,7 @@ int lAddSharedTexture(lua_State* L) {
 		auto key = luaL_checkstring(L, 3);
 	if (object->AddSharedTexture(luaL_checkstring(L, 2),key)) //Returns 1 on error
 	{
-		return luaL_error(L, "Could not find shared texture with key: '%s'", *key);
+		return luaL_error(L, "Could not find shared texture with key: '%s'", key);
 	}
 
 	return 0;
