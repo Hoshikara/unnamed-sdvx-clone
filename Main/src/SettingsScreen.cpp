@@ -868,15 +868,15 @@ protected:
 		Label("Password:");
 		m_multiplayerPassword.RenderPassword(m_nctx);
 
-		SectionHeader("Internet Ranking");
+		// SectionHeader("Internet Ranking");
 
-		Label("IR base URL:");
-		m_irBaseURL.Render(m_nctx);
+		// Label("IR base URL:");
+		// m_irBaseURL.Render(m_nctx);
 
-		Label("IR token:");
-		m_irToken.RenderPassword(m_nctx);
+		// Label("IR token:");
+		// m_irToken.RenderPassword(m_nctx);
 
-		ToggleSetting(GameConfigKeys::IRLowBandwidth, "Low bandwidth mode (disables sending replays)");
+		// ToggleSetting(GameConfigKeys::IRLowBandwidth, "Low bandwidth mode (disables sending replays)");
 	}
 };
 

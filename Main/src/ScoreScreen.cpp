@@ -283,11 +283,11 @@ private:
 
 		m_mapDatabase.AddScore(newScore);
 
-		if (g_gameConfig.GetString(GameConfigKeys::IRBaseURL) != "")
-		{
-			m_irState = IR::ResponseState::Pending;
-			m_irResponse = IR::PostScore(*newScore, m_beatmapSettings);
-		}
+		// if (g_gameConfig.GetString(GameConfigKeys::IRBaseURL) != "")
+		// {
+		// 	m_irState = IR::ResponseState::Pending;
+		// 	m_irResponse = IR::PostScore(*newScore, m_beatmapSettings);
+		// }
 
 		const bool cleared = Scoring::CalculateBadge(*newScore) >= ClearMark::NormalClear;
 		const bool wholeChartPlayed = cleared || newScore->gaugeType == GaugeType::Normal;

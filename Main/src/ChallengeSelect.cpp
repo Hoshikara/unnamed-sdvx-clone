@@ -341,7 +341,7 @@ public:
 		lua_pushboolean(m_lua, Active);
 		if (lua_pcall(m_lua, 2, 0, 0) != 0)
 		{
-			g_application->ScriptError("songselect/filterwheel", m_lua)
+			g_application->ScriptError("songselect/filterwheel", m_lua);
 		}
 	}
 	~ChallengeFilterSelection()
