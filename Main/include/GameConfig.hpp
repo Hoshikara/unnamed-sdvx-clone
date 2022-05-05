@@ -28,6 +28,8 @@ DefineEnum(GameConfigKeys,
 
 		   AntiAliasing,
 		   MasterVolume,
+           FXVolume,
+	       SlamVolume,
 		   VSync,
 		   ShowFps,
 		   ForcePortrait,

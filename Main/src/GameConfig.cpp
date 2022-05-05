@@ -65,6 +65,8 @@ void GameConfig::InitDefaults()
     Set(GameConfigKeys::AdjustWindowPositionOnStartup, true);
 	Set(GameConfigKeys::AntiAliasing, 1);
 	Set(GameConfigKeys::MasterVolume, 1.0f);
+    Set(GameConfigKeys::FXVolume, 1.0f);
+	Set(GameConfigKeys::SlamVolume, 1.0f);
 	Set(GameConfigKeys::ScreenX, -1);
 	Set(GameConfigKeys::ScreenY, -1);
 	Set(GameConfigKeys::VSync, false);

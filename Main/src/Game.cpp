@@ -153,6 +153,9 @@ private:
 	// Combo gain animation
 	Timer m_comboAnimation;
 
+    float m_fxVolume = 1.0;
+	float m_slamVolume = 1.0;
+
 	Sample m_slamSample;
 	Sample m_clickSamples[2];
 	Sample* m_fxSamples = nullptr;
@@ -1342,6 +1345,13 @@ public:
 		CheckedLoad(m_clickSamples[0] = g_application->LoadSample("click-01"));
 		CheckedLoad(m_clickSamples[1] = g_application->LoadSample("click-02"));
 
+        m_fxVolume = g_gameConfig.GetFloat(GameConfigKeys::FXVolume);
+		m_slamVolume = g_gameConfig.GetFloat(GameConfigKeys::SlamVolume);
+
+		m_slamSample->SetVolume(m_fxVolume * m_slamVolume);
+		m_clickSamples[0]->SetVolume(m_fxVolume * m_slamVolume);
+		m_clickSamples[1]->SetVolume(m_fxVolume * m_slamVolume);
+
 		Vector<String> default_sfx = {
 			"clap",
 			"clap_impact",
@@ -1365,6 +1375,10 @@ public:
 			if (!m_fxSamples[i])
 			{
 				Logf("Failed to load FX chip sample: \"%s\"", Logger::Severity::Warning, samples[i]);
+			}
+            else
+			{
+				m_fxSamples[i]->SetVolume(m_fxVolume);
 			}
 		}
 
@@ -2080,7 +2094,7 @@ public:
 		{
 			if (m_fxSamples[st->sampleIndex])
 			{
-				m_fxSamples[st->sampleIndex]->SetVolume(st->sampleVolume);
+				m_fxSamples[st->sampleIndex]->SetVolume(st->sampleVolume*m_fxVolume);
 				m_fxSamples[st->sampleIndex]->Play();
 			}
 		}
@@ -2266,7 +2280,7 @@ public:
 		}
 		else if(key == EventKey::SlamVolume)
 		{
-			m_slamSample->SetVolume(data.floatVal);
+			m_slamSample->SetVolume(data.floatVal*m_fxVolume);
 		}
 		else if (key == EventKey::ChartEnd)
 		{
