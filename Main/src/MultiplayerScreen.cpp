@@ -871,6 +871,11 @@ bool MultiplayerScreen::m_returnToMainList()
 	g_application->DiscordPresenceMulti("", 0, 0, "");
 	m_roomId = "";
 	m_hasSelectedMap = false;
+    m_selectedMapId = 0;
+	m_selectedDiffIndex = 0;
+	m_selectedMapHash = "";
+	m_selectedMapShortPath = "";
+	m_clearLuaMap();
 	return true;
 }
 
