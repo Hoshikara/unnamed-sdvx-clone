@@ -72,8 +72,17 @@ void Input::Init(Graphics::Window& wnd)
 			auto id = SDL_JoystickGetDeviceGUID(i);
 			if (memcmp(deviceId.data(), id.data, 16) == 0)
 			{
-				deviceIndex = i;
-				break;
+				deviceIndex = i; //always set device index since it is a match, but check input count in case of multiple matches
+				auto joystick = SDL_JoystickOpen(i);
+
+				int numInputs = 0;
+				numInputs += SDL_JoystickNumAxes(joystick);
+				numInputs += SDL_JoystickNumButtons(joystick);
+				numInputs += SDL_JoystickNumHats(joystick);
+
+				SDL_JoystickClose(joystick);
+				if (numInputs > 0)
+					break;
 			}
 		}
 
