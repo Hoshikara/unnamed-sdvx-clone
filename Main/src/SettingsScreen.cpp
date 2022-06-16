@@ -696,21 +696,21 @@ public:
 protected:
 	void Load() override
 	{
-		m_channels = { "release", "master", "develop" };
-		String channel = g_gameConfig.GetString(GameConfigKeys::UpdateChannel);
+		// m_channels = { "release", "master", "develop" };
+		// String channel = g_gameConfig.GetString(GameConfigKeys::UpdateChannel);
 
-		if (!m_channels.Contains(channel))
-		{
-			m_channels.insert(m_channels.begin(), channel);
-		}
+		// if (!m_channels.Contains(channel))
+		// {
+		// 	m_channels.insert(m_channels.begin(), channel);
+		// }
 	}
 
 	void Save() override
 	{
-		if (g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates))
-		{
-			g_application->CheckForUpdate();
-		}
+		// if (g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates))
+		// {
+		// 	g_application->CheckForUpdate();
+		// }
 	}
 
 	const Vector<const char*> m_aaModes = { "Off", "2x MSAA", "4x MSAA", "8x MSAA", "16x MSAA" };
@@ -749,14 +749,14 @@ protected:
 		SetApply(ToggleSetting(GameConfigKeys::ShowFps, "Show FPS"));
         SetApply(ToggleSetting(GameConfigKeys::KeepFontTexture, "Save font texture (settings load faster but uses more memory)"));
 
-		SectionHeader("Update");
+		// SectionHeader("Update");
 
-		ToggleSetting(GameConfigKeys::CheckForUpdates, "Check for updates on startup");
+		// ToggleSetting(GameConfigKeys::CheckForUpdates, "Check for updates on startup");
 
-		if (m_channels.size() > 0)
-		{
-			StringSelectionSetting(GameConfigKeys::UpdateChannel, m_channels, "Update Channel:");
-		}
+		// if (m_channels.size() > 0)
+		// {
+		// 	StringSelectionSetting(GameConfigKeys::UpdateChannel, m_channels, "Update Channel:");
+		// }
 
 		SectionHeader("Logging");
 

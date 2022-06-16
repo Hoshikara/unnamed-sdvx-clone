@@ -225,7 +225,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::MuteUnfocused, false);
 	Set(GameConfigKeys::PrerenderEffects, false);
 
-	Set(GameConfigKeys::CheckForUpdates, true);
+	// Set(GameConfigKeys::CheckForUpdates, true);
 	Set(GameConfigKeys::OnlyRelease, true); // deprecated
 	Set(GameConfigKeys::LimitSettingsFont, false);
 
@@ -256,7 +256,7 @@ void GameConfig::InitDefaults()
     Set(GameConfigKeys::SkinDevMode, false);
 
 	Set(GameConfigKeys::CurrentProfileName, "Main");
-	Set(GameConfigKeys::UpdateChannel, "master");
+	// Set(GameConfigKeys::UpdateChannel, "master");
 
 #ifndef EMBEDDED
 	Set(GameConfigKeys::KeepFontTexture, true);

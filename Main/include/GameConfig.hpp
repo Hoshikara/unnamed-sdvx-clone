@@ -162,7 +162,6 @@ DefineEnum(GameConfigKeys,
 		   MuteUnfocused,
 		   PrerenderEffects,
 
-		   CheckForUpdates,
 		   OnlyRelease,
 		   LimitSettingsFont,
 
@@ -216,8 +215,9 @@ DefineEnum(GameConfigKeys,
            BlastiveLevel,
 		   MirrorChart,
 		   RandomizeChart,
-		   BackupGauge,
-		   UpdateChannel)
+		   BackupGauge
+		//    UpdateChannel
+           )
 
 // List of settings overriden by profiles
 extern ConfigBase::KeyList GameConfigProfileSettings;

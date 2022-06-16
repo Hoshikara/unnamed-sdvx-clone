@@ -1,7 +1,5 @@
 # [Download](https://drive.google.com/file/d/1XQIqtJZEqpfGbOSOQJgqvaxdm_jeV2Sj/view?usp=sharing)
 
-# DO NOT UPDATE YOUR GAME IF YOU USE THIS BUILD
-
 A fork to build a version of USC without the laser changes implemented around April 2021. There has been some work to cherry-pick commits from USC's `develop` branch with a few omissions (see commit history of the `personal` branch).
 
 Some extra changes made with no oversight so be aware:

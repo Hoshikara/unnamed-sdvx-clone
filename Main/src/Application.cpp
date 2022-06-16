@@ -634,152 +634,152 @@ void __discordDisconnected(int errcode, const char *msg)
 
 void __updateChecker()
 {
-	// Handle default config or old config
-	if (g_gameConfig.GetBool(GameConfigKeys::OnlyRelease))
-	{
-		g_gameConfig.Set(GameConfigKeys::UpdateChannel, "release");
-		g_gameConfig.Set(GameConfigKeys::OnlyRelease, false);
-	}
+// 	// Handle default config or old config
+// 	if (g_gameConfig.GetBool(GameConfigKeys::OnlyRelease))
+// 	{
+// 		g_gameConfig.Set(GameConfigKeys::UpdateChannel, "release");
+// 		g_gameConfig.Set(GameConfigKeys::OnlyRelease, false);
+// 	}
 
-	String channel = g_gameConfig.GetString(GameConfigKeys::UpdateChannel);
+// 	String channel = g_gameConfig.GetString(GameConfigKeys::UpdateChannel);
 
-    // For some reason the github actions have the branch as HEAD?
-    if (channel == "HEAD")
-    {
-		g_gameConfig.Set(GameConfigKeys::UpdateChannel, "master");
-    }
+//     // For some reason the github actions have the branch as HEAD?
+//     if (channel == "HEAD")
+//     {
+// 		g_gameConfig.Set(GameConfigKeys::UpdateChannel, "master");
+//     }
 
-	ProfilerScope $1("Check for updates");
-	if (channel == "release")
-	{
-		auto r = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/releases/latest"});
+// 	ProfilerScope $1("Check for updates");
+// 	if (channel == "release")
+// 	{
+// 		auto r = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/releases/latest"});
 
-		Logf("Update check status code: %d", Logger::Severity::Normal, r.status_code);
-		if (r.status_code != 200)
-		{
-			Logf("Failed to get update information: %s", Logger::Severity::Error, r.error.message.c_str());
-		}
-		else
-		{
-			nlohmann::json latestInfo;
-			///TODO: Don't use exceptions
-			try
-			{
-				latestInfo = nlohmann::json::parse(r.text);
-			}
-			catch (const std::exception &e)
-			{
-				Logf("Failed to parse version json: \"%s\"", Logger::Severity::Error, e.what());
-				return;
-			}
+// 		Logf("Update check status code: %d", Logger::Severity::Normal, r.status_code);
+// 		if (r.status_code != 200)
+// 		{
+// 			Logf("Failed to get update information: %s", Logger::Severity::Error, r.error.message.c_str());
+// 		}
+// 		else
+// 		{
+// 			nlohmann::json latestInfo;
+// 			///TODO: Don't use exceptions
+// 			try
+// 			{
+// 				latestInfo = nlohmann::json::parse(r.text);
+// 			}
+// 			catch (const std::exception &e)
+// 			{
+// 				Logf("Failed to parse version json: \"%s\"", Logger::Severity::Error, e.what());
+// 				return;
+// 			}
 
-			//tag_name should always be "vX.Y.Z" so we remove the 'v'
-			String tagname;
-			latestInfo.at("tag_name").get_to(tagname);
-			tagname = tagname.substr(1);
-			bool outdated = false;
-			Vector<String> versionStrings = tagname.Explode(".");
-			int major = 0, minor = 0, patch = 0;
-			major = std::stoi(versionStrings[0]);
-			if (versionStrings.size() > 1)
-				minor = std::stoi(versionStrings[1]);
-			if (versionStrings.size() > 2)
-				patch = std::stoi(versionStrings[2]);
+// 			//tag_name should always be "vX.Y.Z" so we remove the 'v'
+// 			String tagname;
+// 			latestInfo.at("tag_name").get_to(tagname);
+// 			tagname = tagname.substr(1);
+// 			bool outdated = false;
+// 			Vector<String> versionStrings = tagname.Explode(".");
+// 			int major = 0, minor = 0, patch = 0;
+// 			major = std::stoi(versionStrings[0]);
+// 			if (versionStrings.size() > 1)
+// 				minor = std::stoi(versionStrings[1]);
+// 			if (versionStrings.size() > 2)
+// 				patch = std::stoi(versionStrings[2]);
 
-			outdated = major > VERSION_MAJOR || minor > VERSION_MINOR || patch > VERSION_PATCH;
+// 			outdated = major > VERSION_MAJOR || minor > VERSION_MINOR || patch > VERSION_PATCH;
 
-			if (outdated)
-			{
-				String updateUrl;
-				latestInfo.at("html_url").get_to(updateUrl);
-				String updateDownload;
-				latestInfo.at("assets").at(0).at("browser_download_url").get_to(updateDownload);
-				g_application->SetUpdateAvailable(tagname, updateUrl, updateDownload);
-			}
-		}
-	}
-	else
-	{
-#ifdef GIT_COMMIT
-		auto response = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/actions/runs"});
-		if (response.status_code != 200)
-		{
-			Logf("Failed to get update information: %s", Logger::Severity::Error, response.error.message.c_str());
-			return;
-		}
+// 			if (outdated)
+// 			{
+// 				String updateUrl;
+// 				latestInfo.at("html_url").get_to(updateUrl);
+// 				String updateDownload;
+// 				latestInfo.at("assets").at(0).at("browser_download_url").get_to(updateDownload);
+// 				g_application->SetUpdateAvailable(tagname, updateUrl, updateDownload);
+// 			}
+// 		}
+// 	}
+// 	else
+// 	{
+// #ifdef GIT_COMMIT
+// 		auto response = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/actions/runs"});
+// 		if (response.status_code != 200)
+// 		{
+// 			Logf("Failed to get update information: %s", Logger::Severity::Error, response.error.message.c_str());
+// 			return;
+// 		}
 
-		auto commits = nlohmann::json::parse(response.text);
-		String current_hash;
-		String(GIT_COMMIT).Split("_", nullptr, &current_hash);
-		String current_branch = channel;
+// 		auto commits = nlohmann::json::parse(response.text);
+// 		String current_hash;
+// 		String(GIT_COMMIT).Split("_", nullptr, &current_hash);
+// 		String current_branch = channel;
 
-		if (commits.contains("message"))
-		{
-			String errormsg;
-			commits.at("message").get_to(errormsg);
-			Logf("Failed to get update information: %s", Logger::Severity::Warning, *errormsg);
-			return;
-		}
+// 		if (commits.contains("message"))
+// 		{
+// 			String errormsg;
+// 			commits.at("message").get_to(errormsg);
+// 			Logf("Failed to get update information: %s", Logger::Severity::Warning, *errormsg);
+// 			return;
+// 		}
 
-		commits = commits.at("workflow_runs");
-		for (auto &commit_kvp : commits.items())
-		{
-			auto commit = commit_kvp.value();
+// 		commits = commits.at("workflow_runs");
+// 		for (auto &commit_kvp : commits.items())
+// 		{
+// 			auto commit = commit_kvp.value();
 
-			String branch;
-			commit.at("head_branch").get_to(branch);
-			String status;
-			commit.at("status").get_to(status);
-			String conclusion;
-			if (commit.at("conclusion").is_null())
-			{
-				//not built yet
-				continue;
-			}
-			commit.at("conclusion").get_to(conclusion);
+// 			String branch;
+// 			commit.at("head_branch").get_to(branch);
+// 			String status;
+// 			commit.at("status").get_to(status);
+// 			String conclusion;
+// 			if (commit.at("conclusion").is_null())
+// 			{
+// 				//not built yet
+// 				continue;
+// 			}
+// 			commit.at("conclusion").get_to(conclusion);
 
-			if (branch == current_branch && status == "completed" && conclusion == "success")
-			{
-				String new_hash;
-				commit.at("head_sha").get_to(new_hash);
-				if (current_hash == new_hash.substr(0, current_hash.length())) //up to date
-				{
-					return;
-				}
-				else //update available
-				{
-					auto response = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/commits/" + new_hash});
-					String updateUrl = "https://github.com/drewol/unnamed-sdvx-clone";
-					if (response.status_code != 200)
-					{
-						Logf("Failed to get update information: %s", Logger::Severity::Warning, response.error.message.c_str());
-					}
-					else
-					{
-						auto commit_status = nlohmann::json::parse(response.text);
-						commit_status.at("html_url").get_to(updateUrl);
-					}
-					if (current_branch == "master")
-						g_application->SetUpdateAvailable(new_hash.substr(0, 7), updateUrl, "http://drewol.me/Downloads/Game.zip");
-					else
-						g_application->SetUpdateAvailable(new_hash.substr(0, 7), updateUrl, "https://builds.drewol.me/" + current_branch + "/Game");
-					return;
-				}
-			}
-		}
-#endif
-	}
+// 			if (branch == current_branch && status == "completed" && conclusion == "success")
+// 			{
+// 				String new_hash;
+// 				commit.at("head_sha").get_to(new_hash);
+// 				if (current_hash == new_hash.substr(0, current_hash.length())) //up to date
+// 				{
+// 					return;
+// 				}
+// 				else //update available
+// 				{
+// 					auto response = cpr::Get(cpr::Url{"https://api.github.com/repos/drewol/unnamed-sdvx-clone/commits/" + new_hash});
+// 					String updateUrl = "https://github.com/drewol/unnamed-sdvx-clone";
+// 					if (response.status_code != 200)
+// 					{
+// 						Logf("Failed to get update information: %s", Logger::Severity::Warning, response.error.message.c_str());
+// 					}
+// 					else
+// 					{
+// 						auto commit_status = nlohmann::json::parse(response.text);
+// 						commit_status.at("html_url").get_to(updateUrl);
+// 					}
+// 					if (current_branch == "master")
+// 						g_application->SetUpdateAvailable(new_hash.substr(0, 7), updateUrl, "http://drewol.me/Downloads/Game.zip");
+// 					else
+// 						g_application->SetUpdateAvailable(new_hash.substr(0, 7), updateUrl, "https://builds.drewol.me/" + current_branch + "/Game");
+// 					return;
+// 				}
+// 			}
+// 		}
+// #endif
+// 	}
 }
 
 void Application::CheckForUpdate()
 {
 	m_hasUpdate = false;
-	if (g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates))
-	{
-		if (m_updateThread.joinable())
-			m_updateThread.join();
-		m_updateThread = Thread(__updateChecker);
-	}
+	// if (g_gameConfig.GetBool(GameConfigKeys::CheckForUpdates))
+	// {
+	// 	if (m_updateThread.joinable())
+	// 		m_updateThread.join();
+	// 	m_updateThread = Thread(__updateChecker);
+	// }
 }
 
 void Application::m_InitDiscord()
