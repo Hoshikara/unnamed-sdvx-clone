@@ -147,6 +147,8 @@ public:
 	float laserSpeedOffset = 0.90f;
 	float centerSplit = 0.0f;
 
+    int critRating = 2;
+
 	// Visible time elements on the playfield track
 	// a single unit is 1 beat in distance
 	Vector2 trackViewRange;

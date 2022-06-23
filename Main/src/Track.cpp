@@ -42,6 +42,8 @@ bool Track::AsyncLoad()
 	loader = new AsyncAssetLoader();
 	String skin = g_application->GetCurrentSkin();
 
+    critRating = g_gameConfig.GetBool(GameConfigKeys::SCriticalHitBeam) ? 4 : 2;
+
 	float laserHues[2] = { 0.f };
 	laserHues[0] = g_gameConfig.GetFloat(GameConfigKeys::Laser0Color);
 	laserHues[1] = g_gameConfig.GetFloat(GameConfigKeys::Laser1Color);
@@ -830,7 +832,7 @@ void Track::OnHoldEnter(Input::Button buttonCode)
     const auto buttonIndex = (uint32)buttonCode;
     if (buttonIndex >= 6)
         return;
-    m_buttonHitEffects[buttonIndex].Reset(buttonIndex, hitColors[(size_t)ScoreHitRating::Perfect], true, 4);
+    m_buttonHitEffects[buttonIndex].Reset(buttonIndex, hitColors[(size_t)ScoreHitRating::Perfect], true, critRating);
 }
 
 void Track::OnButtonReleased(Input::Button buttonCode)

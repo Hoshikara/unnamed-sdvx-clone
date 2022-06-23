@@ -103,6 +103,7 @@ void GameConfig::InitDefaults()
 	Set(GameConfigKeys::DistantButtonScale, 1.0f);
 	Set(GameConfigKeys::BTOverFXScale, 0.8f);
 	Set(GameConfigKeys::DisableBackgrounds, false);
+    Set(GameConfigKeys::SCriticalHitBeam, true);
 	Set(GameConfigKeys::LeadInTime, 3000);
 	Set(GameConfigKeys::PracticeLeadInTime, 1500);
 	Set(GameConfigKeys::AutoComputeSongOffset, false);

@@ -102,6 +102,7 @@ private:
 	SpeedMods m_speedMod;
 	float m_modSpeed = 400;
 
+    bool m_sCritHitBeam = true;
     bool m_delayedHitEffects;
 
 	// Texture of the map jacket image, if available
@@ -401,6 +402,7 @@ public:
 				}
 			}
 
+        m_sCritHitBeam = g_gameConfig.GetBool(GameConfigKeys::SCriticalHitBeam);
         m_delayedHitEffects = g_gameConfig.GetBool(GameConfigKeys::DelayedHitEffects);
 
 		// Initialize input/scoring
@@ -2083,7 +2085,7 @@ public:
 		if (!skipEffect) {
             int r = (int) rating;
 
-            if ((rating == ScoreHitRating::Perfect) && (abs(delta) <= (m_hitWindow.perfect / 2))) {
+            if (m_sCritHitBeam && (rating == ScoreHitRating::Perfect) && (abs(delta) <= (m_hitWindow.perfect / 2))) {
                 r = 4;
             }
 

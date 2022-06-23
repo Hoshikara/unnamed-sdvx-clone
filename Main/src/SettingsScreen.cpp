@@ -614,6 +614,7 @@ protected:
 		SectionHeader("Game Elements");
 
 		ToggleSetting(GameConfigKeys::DisableBackgrounds, "Disable song backgrounds");
+        ToggleSetting(GameConfigKeys::SCriticalHitBeam, "Enable S-Critical Hit Beam");
         ToggleSetting(GameConfigKeys::DelayedHitEffects, "Delayed fade button hit effects");
 		FloatSetting(GameConfigKeys::DistantButtonScale, "Distant button scale", 1.0f, 5.0f);
 
