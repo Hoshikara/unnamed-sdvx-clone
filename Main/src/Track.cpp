@@ -70,8 +70,16 @@ bool Track::AsyncLoad()
 		loader->AddTexture(scoreHitTextures[i], Utility::Sprintf("score%d.png", i));
 	}
 
-    for(uint32 i = 0; i < 5; i++) {
-        loader->AddTexture(hitBeamTextures[i], Utility::Sprintf("hitbeam%d.png", i));
+    Image hitBeamTemp = ImageRes::Create(Path::Absolute("skins/" + skin + "/textures/hitbeam0.png"));
+
+    if (hitBeamTemp == nullptr) {
+        for(uint32 i = 0; i < 5; i++) {
+            loader->AddTexture(hitBeamTextures[i], Path::Normalize(Path::Absolute(Utility::Sprintf("skin_fallback/textures/hitbeam%d.png", i))), true);
+        }
+    } else {
+        for(uint32 i = 0; i < 5; i++) {
+            loader->AddTexture(hitBeamTextures[i], Utility::Sprintf("hitbeam%d.png", i));
+        }
     }
 
 	// Load Button object
@@ -94,7 +102,7 @@ bool Track::AsyncLoad()
 
 	// Track materials
 	loader->AddMaterial(trackMaterial, "track");
-	loader->AddMaterial(spriteMaterial, "sprite"); // General purpose material
+    loader->AddMaterial(spriteMaterial, "sprite", hitBeamTemp == nullptr);
 	loader->AddMaterial(buttonMaterial, "button");
 	loader->AddMaterial(holdButtonMaterial, "holdbutton");
 	loader->AddMaterial(laserMaterial, "laser");

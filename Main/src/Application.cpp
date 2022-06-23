@@ -1528,6 +1528,9 @@ Material Application::LoadMaterial(const String &name)
 {
 	return LoadMaterial(name, String("skins/") + m_skin + String("/shaders/"));
 }
+Material Application::LoadMaterialFallback(const String& name) {
+    return LoadMaterial(name, String("skin_fallback/shaders/"));
+}
 Sample Application::LoadSample(const String &name, const bool &external)
 {
 	String path;

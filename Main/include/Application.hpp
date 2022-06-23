@@ -66,6 +66,7 @@ public:
 	Texture LoadTexture(const String & name, const bool& external);
 	Material LoadMaterial(const String& name);
 	Material LoadMaterial(const String& name, const String& path);
+    Material LoadMaterialFallback(const String& name);
 	Sample LoadSample(const String& name, const bool& external = false);
 	Graphics::Font LoadFont(const String& name, const bool& external = false);
 	int LoadImageJob(const String& path, Vector2i size, int placeholder, const bool& web = false);

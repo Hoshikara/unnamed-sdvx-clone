@@ -5,18 +5,24 @@
 struct AsyncLoadOperation : public IAsyncLoadable
 {
 	String name;
+    bool fallback = false;
 };
 struct AsyncTextureLoadOperation : public AsyncLoadOperation
 {
 	Texture& target;
 	Image image;
-	AsyncTextureLoadOperation(Texture& target, const String& path) : target(target)
+	AsyncTextureLoadOperation(Texture& target, const String& path, bool fb) : target(target)
 	{
+        fallback = fb;
 		name = path;
 	}
 	bool AsyncLoad()
 	{
-		image = g_application->LoadImage(name);
+        if (fallback) {
+            image = g_application->LoadImageExternal(name);
+        } else {
+            image = g_application->LoadImage(name);
+        }
 		return image.get() != nullptr;
 	}
 	bool AsyncFinalize()
@@ -45,8 +51,9 @@ struct AsyncMeshLoadOperation : public AsyncLoadOperation
 struct AsyncMaterialLoadOperation : public AsyncLoadOperation
 {
 	Material& target;
-	AsyncMaterialLoadOperation(Material& target, const String& path) : target(target)
+	AsyncMaterialLoadOperation(Material& target, const String& path, bool fb) : target(target)
 	{
+        fallback = fb;
 		name = path;
 	}
 	bool AsyncLoad()
@@ -55,6 +62,10 @@ struct AsyncMaterialLoadOperation : public AsyncLoadOperation
 	}
 	bool AsyncFinalize()
 	{
+        if (fallback) {
+            return (target = g_application->LoadMaterialFallback(name)).get() != nullptr;
+        }
+
 		return (target = g_application->LoadMaterial(name)).get() != nullptr;
 	}
 };
@@ -97,17 +108,17 @@ AsyncAssetLoader::~AsyncAssetLoader()
 	delete m_impl;
 }
 
-void AsyncAssetLoader::AddTexture(Texture& out, const String& path)
+void AsyncAssetLoader::AddTexture(Texture& out, const String& path, bool fallback)
 {
-	m_impl->loadables.Add(new AsyncTextureLoadOperation(out, path));
+	m_impl->loadables.Add(new AsyncTextureLoadOperation(out, path, fallback));
 }
 void AsyncAssetLoader::AddMesh(Mesh& out, const String& path)
 {
 	m_impl->loadables.Add(new AsyncMeshLoadOperation(out, path));
 }
-void AsyncAssetLoader::AddMaterial(Material& out, const String& path)
+void AsyncAssetLoader::AddMaterial(Material& out, const String& path, bool fallback)
 {
-	m_impl->loadables.Add(new AsyncMaterialLoadOperation(out, path));
+	m_impl->loadables.Add(new AsyncMaterialLoadOperation(out, path, fallback));
 }
 void AsyncAssetLoader::AddLoadable(IAsyncLoadable& loadable, const String& id /*= "unknown"*/)
 {
