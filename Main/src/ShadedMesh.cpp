@@ -44,8 +44,9 @@ void ShadedMeshOnTrack::DrawOnTrack() {
 	RenderState rs = m_game->GetCamera().CreateRenderState(m_clip);
 	RenderQueue rq(g_gl, rs);
 	Transform t = m_game->GetTrack().trackOrigin;
-	t *= Transform::Translation(m_trackPos);
+	t *= Transform::Translation(m_pos);
 	t *= Transform::Scale(m_scale);
+	t *= Transform::Rotation(m_rotation);
 	rq.Draw(t, m_mesh, m_material, m_params);
 	rq.Process();
 }
@@ -184,25 +185,23 @@ int lUseGameMesh(lua_State* L)
 	return 0;
 }
 
-int lSetPosOnTrack(lua_State* L)
+int lSetPos(lua_State* L)
 {
-	ShadedMeshOnTrack* object;
-	GET_TRACK_MESH(L, object)
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
 	float z = 0.0f;
 	if (lua_gettop(L) >= 4)
 		z = luaL_checknumber(L, 4);
 
-	object->SetTrackPos(x, y, z);
+	object->SetPos(x, y, z);
 	return 0;
 }
 
-int lGetPosOnTrack(lua_State* L)
+int lGetPos(lua_State* L)
 {
-	ShadedMeshOnTrack* object;
-	GET_TRACK_MESH(L, object);
-	auto& v = object->GetTrackPos();
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	auto& v = object->GetPos();
 	lua_pushnumber(L, v.x);
 	lua_pushnumber(L, v.y);
 	lua_pushnumber(L, v.z);
@@ -211,8 +210,7 @@ int lGetPosOnTrack(lua_State* L)
 
 int lSetScale(lua_State* L)
 {
-	ShadedMeshOnTrack* object;
-	GET_TRACK_MESH(L, object);
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	float x = luaL_checknumber(L, 2);
 	float y = luaL_checknumber(L, 3);
 	float z = 1.0f;
@@ -220,6 +218,50 @@ int lSetScale(lua_State* L)
 		z = luaL_checknumber(L, 4);
 
 	object->SetScale(x, y, z);
+	return 0;
+}
+
+int lGetScale(lua_State* L)
+{
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	auto& v = object->GetScale();
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	lua_pushnumber(L, v.z);
+	return 3;
+}
+
+int lSetRotation(lua_State* L)
+{
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	float roll = luaL_checknumber(L, 2);
+
+	float yaw = 0.0f;
+	if (lua_gettop(L) >= 3)
+		yaw = luaL_checknumber(L, 3);
+	float pitch = 0.0f;
+	if (lua_gettop(L) >= 4)
+		pitch = luaL_checknumber(L, 4);
+
+	object->SetRotation(pitch, yaw, roll);
+	return 0;
+}
+
+int lGetRotation(lua_State* L)
+{
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	auto& v = object->GetRotation();
+	lua_pushnumber(L, v.z);
+	lua_pushnumber(L, v.y);
+	lua_pushnumber(L, v.x);
+	return 3;
+}
+
+int lSetWireframe(lua_State* L)
+{
+	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
+	bool b = lua_toboolean(L, 2);
+	object->SetIsWireframe(b);
 	return 0;
 }
 
@@ -233,16 +275,6 @@ int lScaleToLength(lua_State* L)
     return 0;
 }
 
-int lGetScale(lua_State* L)
-{
-	ShadedMeshOnTrack* object;
-	GET_TRACK_MESH(L, object);
-	auto& v = object->GetScale();
-	lua_pushnumber(L, v.x);
-	lua_pushnumber(L, v.y);
-	lua_pushnumber(L, v.z);
-	return 3;
-}
 
 int lSetLength(lua_State* L)
 {
@@ -301,8 +333,10 @@ int lDraw(lua_State* L) {
 	{
 		ShadedMesh* object = *userdata;
 
+#ifndef EMBEDDED //TODO: Some other wireframe mode should be possible in both GL versions
 		if (object->IsWireframe())
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+#endif
 		if (ShadedMeshOnTrack* objOnTrack = dynamic_cast<ShadedMeshOnTrack*>(object))
 		{
 			objOnTrack->DrawOnTrack();
@@ -311,8 +345,10 @@ int lDraw(lua_State* L) {
 		{
 			object->Draw();
 		}
+#ifndef EMBEDDED
 		if (object->IsWireframe())
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+#endif
 	}
 	else {
 		luaL_error(L, "null userdata");
@@ -433,8 +469,6 @@ int lSetParamVec4(lua_State* L)
 	return 0;
 }
 
-
-
 int __index(lua_State* L) {
 	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	String fname = lua_tostring(L, 2);
@@ -471,13 +505,9 @@ int __index(lua_State* L) {
 	constMap.Add("PRIM_LINESTRIP", (int)PrimitiveType::LineStrip);
 	constMap.Add("PRIM_POINTLIST", (int)PrimitiveType::PointList);
 	
-    if (auto* obj = dynamic_cast<ShadedMeshOnTrack*>(object))
+	if (auto* obj = dynamic_cast<ShadedMeshOnTrack*>(object))
 	{
 		fmap.Add("UseGameMesh", lUseGameMesh);
-		fmap.Add("SetPosOnTrack", lSetPosOnTrack);
-		fmap.Add("GetPosOnTrack", lGetPosOnTrack);
-		fmap.Add("SetScale", lSetScale);
-		fmap.Add("GetScale", lGetScale);
 		fmap.Add("SetLength", lSetLength);
 		fmap.Add("GetLength", lGetLength);
 		fmap.Add("ScaleToLength", lScaleToLength);

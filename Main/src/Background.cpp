@@ -177,11 +177,6 @@ public:
 		bindable->AddFunction("GetTilt", this, &TestBackground::GetTilt);
 		bindable->AddFunction("GetScreenCenter", this, &TestBackground::GetScreenCenter);
 		bindable->AddFunction("GetClearTransition", this, &TestBackground::GetClearTransition);
-        bindable->AddFunction("CreateShadedMeshOnTrack", this, &TestBackground::CreateTrackMesh);
-		bindable->AddFunction("TrackGetCurrentLaneXPos", this, &TestBackground::GetLanePosition);
-		bindable->AddFunction("TrackGetYPosForTime", this, &TestBackground::GetTrackTickY);
-		bindable->AddFunction("TrackGetLengthForDuration", this, &TestBackground::GetTrackDurationYScale);
-		bindable->AddFunction("TrackHideObject", this, &TestBackground::HideTickObject);
 
 		bindable->Push();
 		lua_settop(lua, 0);

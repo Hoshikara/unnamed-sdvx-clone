@@ -2874,7 +2874,7 @@ public:
 		return m_hitWindow;
 	}
 
-    virtual LuaBindable* MakeTrackLuaBindable(struct lua_State* L)
+virtual LuaBindable* MakeTrackLuaBindable(struct lua_State* L)
 	{
 		auto* bind = new LuaBindable(L, "track");
 		bind->AddFunction("GetCurrentLaneXPos", this, &Game_Impl::lTrackGetCurrentLaneXPos);

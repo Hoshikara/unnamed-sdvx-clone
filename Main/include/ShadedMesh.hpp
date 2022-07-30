@@ -65,16 +65,6 @@ public:
 	void DrawOnTrack();
 	void lUseGameMesh(struct lua_State* L);
 
-	void SetTrackPos(float x, float y, float z)
-	{
-		m_trackPos = Vector3(x, y, z);
-	}
-	Vector3& GetTrackPos() { return m_trackPos; }
-	void SetScale(float x, float y, float z)
-	{
-		m_scale = Vector3(x, y, z);
-	}
-	Vector3& GetScale() { return m_scale; }
 
 	void SetLength(float l) { m_length = l; }
 	float GetLength() { return m_length; }
@@ -84,8 +74,6 @@ public:
 
 private:
 	class Game* m_game = nullptr;
-	Vector3 m_trackPos;
-	Vector3 m_scale = Vector3(1,1,1);
 	float m_length = 1;
 	bool m_clip = false;
-};
+}; 
