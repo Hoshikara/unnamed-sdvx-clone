@@ -454,6 +454,8 @@ private:
 				m_PushIntToTable("goods", score->almost);
 				m_PushIntToTable("misses", score->miss);
 				m_PushIntToTable("timestamp", score->timestamp);
+                m_PushStringToTable("playerName", *score->userName);
+				m_PushIntToTable("isLocal", score->localScore);
 				m_PushIntToTable("badge", static_cast<int>(Scoring::CalculateBadge(*score)));
 				lua_settable(m_lua, -3);
 			}
