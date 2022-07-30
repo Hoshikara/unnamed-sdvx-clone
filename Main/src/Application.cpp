@@ -1521,6 +1521,8 @@ Material Application::LoadMaterial(const String &name, const String &path)
 		assert(gshader);
 		ret->AssignShader(ShaderType::Geometry, gshader);
 	}
+    if (!ret)
+		g_gameWindow->ShowMessageBox("Shader Error", "Could not load shaders "+path+name+".vs and "+path+name+".fs", 0);
 	assert(ret);
 	return ret;
 }

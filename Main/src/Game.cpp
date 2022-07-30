@@ -1172,7 +1172,7 @@ public:
 			if (m_foreground)
 		    {
 				m_foreground->Render(deltaTime);
-                	glFlush();
+                glFlush();
 		    }
 
 			// Render Lua HUD

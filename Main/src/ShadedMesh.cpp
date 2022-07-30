@@ -33,7 +33,11 @@ ShadedMesh::ShadedMesh(const String& name, const String& path) {
 
 void ShadedMesh::Draw() {
 	auto rq = g_application->GetRenderQueueBase();
-	rq->DrawScissored(g_application->GetCurrentGUIScissor() ,g_application->GetCurrentGUITransform(), m_mesh, m_material, m_params);
+	Transform t = g_application->GetCurrentGUITransform();
+	t *= Transform::Translation(m_pos);
+	t *= Transform::Scale(m_scale);
+	t *= Transform::Rotation(m_rotation);
+	rq->DrawScissored(g_application->GetCurrentGUIScissor() , t, m_mesh, m_material, m_params);
 }
 
 void ShadedMeshOnTrack::DrawOnTrack() {
@@ -110,46 +114,55 @@ int lSetData(lua_State* L) {
 	ShadedMesh* object = *static_cast<ShadedMesh**>(lua_touserdata(L, 1));
 	Vector<MeshGenerators::SimpleVertex> newData;
 
-	lua_pushvalue(L, 2);
-	lua_pushnil(L);
-	while (lua_next(L, -2) != 0)
+    lua_pushvalue(L, 2); // Push array [-2]
+	lua_pushnil(L); // Push slot for next key [-1]
+	while (lua_next(L, -2) != 0) // key -> [-2], value -> [-1]
 	{
-		lua_pushvalue(L, -1);
-		lua_pushnil(L);
-		lua_next(L, -2);
-		float x, y, u, v;
+		lua_pushvalue(L, -1); // Push sub array [-2]
+		lua_pushnil(L); // Push slot for next key [-1]
+		lua_next(L, -2); // key -> [-2], value -> [-1]
+		float x, y, z, u, v;
 		{
-
-			lua_pushvalue(L, -1);
-			lua_pushnil(L);
+            lua_pushvalue(L, -1); // Push vertex array [-2]
+			lua_pushnil(L); // Push slot for next key [-1]
 			{
-				lua_next(L, -2);
+				lua_next(L, -2); // key -> [-2], value -> [-1]
 				x = luaL_checknumber(L, -1);
-				lua_pop(L, 1);
-				lua_next(L, -2);
+				lua_pop(L, 1); // Remove value
+				lua_next(L, -2); // key -> [-2], value -> [-1]
 				y = luaL_checknumber(L, -1);
-				lua_pop(L, 2);
+				lua_pop(L, 1); // Remove value
+				if (lua_next(L, -2) != 0) {
+					z = luaL_checknumber(L, -1);
+					lua_pop(L, 2); // Remove value and key
+				}
+				else
+				{
+					// lua_next only pushes if there is more key, but consumes the key
+					// so we don't need to pop anything on this side
+					z = 0.0f;
+				}
 			}
 		}
-		lua_pop(L, 2);
-		lua_next(L, -2);
+		lua_pop(L, 2); // Remove key and value
+		lua_next(L, -2); // key -> [-2], value -> [-1]
 		{
 
-			lua_pushvalue(L, -1);
-			lua_pushnil(L);
-			lua_next(L, -2);
+			lua_pushvalue(L, -1); // Push uv array [-2]
+			lua_pushnil(L); // Push slot for next key [-1]
+			lua_next(L, -2); // key -> [-2], value -> [-1]
 			{
 				u = luaL_checknumber(L, -1);
-				lua_pop(L, 1);
+				lua_pop(L, 1); // Remove value
 				lua_next(L, -2);
 				v = luaL_checknumber(L, -1);
-				lua_pop(L, 2);
+				lua_pop(L, 2); // Remove value and key
 			}
 		}
-		lua_pop(L, 5);
+		lua_pop(L, 5); // Remove uv key, sub array k+v, main array k+v
 
 		MeshGenerators::SimpleVertex newVert;
-		newVert.pos = { x, y, 0.0f };
+		newVert.pos = { x, y, z };
 		newVert.tex = { u, v };
 		newData.Add(newVert);
 	}
@@ -288,6 +301,8 @@ int lDraw(lua_State* L) {
 	{
 		ShadedMesh* object = *userdata;
 
+		if (object->IsWireframe())
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 		if (ShadedMeshOnTrack* objOnTrack = dynamic_cast<ShadedMeshOnTrack*>(object))
 		{
 			objOnTrack->DrawOnTrack();
@@ -296,6 +311,8 @@ int lDraw(lua_State* L) {
 		{
 			object->Draw();
 		}
+		if (object->IsWireframe())
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	}
 	else {
 		luaL_error(L, "null userdata");
@@ -436,6 +453,13 @@ int __index(lua_State* L) {
 	fmap.Add("SetBlendMode", lSetBlendMode);
 	fmap.Add("SetPrimitiveType", lSetPrimitiveType);
 	fmap.Add("SetOpaque", lSetOpaque);
+    fmap.Add("SetPosition", lSetPos);
+	fmap.Add("GetPosition", lGetPos);
+	fmap.Add("SetScale", lSetScale);
+	fmap.Add("GetScale", lGetScale);
+	fmap.Add("SetRotation", lSetRotation);
+	fmap.Add("GetRotation", lGetRotation);
+	fmap.Add("SetWireframe", lSetWireframe);
 
 	constMap.Add("BLEND_ADD",  (int)MaterialBlendMode::Additive);
 	constMap.Add("BLEND_MULT", (int)MaterialBlendMode::Multiply);
