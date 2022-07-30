@@ -1502,7 +1502,10 @@ public:
 			}
 			else if (code == SDL_SCANCODE_F12)
 			{
-				Path::ShowInFileBrowser(m_selectionWheel->GetSelection()->path);
+				FolderIndex* sel = m_selectionWheel->GetSelection();
+				if (sel) {
+					Path::ShowInFileBrowser(sel->path);
+				}
 			}
 			else if (code == SDL_SCANCODE_TAB)
 			{
