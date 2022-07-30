@@ -1,4 +1,4 @@
-# [Download](https://drive.google.com/file/d/1dm2P_RtMx5MzwlPg3tKTNRZ7rcgBwu0B/view?usp=sharing)
+# [Download](https://drive.google.com/file/d/1FBtSm9PCRNfuJ_q7wkKUqkJkgJugFo1k/view?usp=sharing)
 
 A fork to build a version of USC without the laser changes implemented around April 2021. There has been some work to cherry-pick commits from USC's `develop` branch with a few omissions (see commit history of the `personal` branch).
 
