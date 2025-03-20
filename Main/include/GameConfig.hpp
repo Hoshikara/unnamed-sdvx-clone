@@ -227,6 +227,7 @@ DefineEnum(GameConfigKeys,
 		   MirrorChart,
 		   RandomizeChart,
 		   BackupGauge,
+       PlaybackSpeed,
 		   UpdateChannel)
 
 // List of settings overriden by profiles

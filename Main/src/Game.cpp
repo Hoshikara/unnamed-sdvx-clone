@@ -615,6 +615,9 @@ public:
 			m_practiceSetupDialog->Open();
 		}
 
+    m_playOptions.playbackSpeed = GetPlaybackOptions().playbackSpeed / 100.0f;
+    ApplyPlaybackSpeed();
+
 		return m_fastGui.Init(this);
 	}
 
@@ -3710,6 +3713,7 @@ PlaybackOptions Game::PlaybackOptionsFromSettings()
 	options.mirror = g_gameConfig.GetBool(GameConfigKeys::MirrorChart);
 	options.random = g_gameConfig.GetBool(GameConfigKeys::RandomizeChart);
 	options.backupGauge = g_gameConfig.GetBool(GameConfigKeys::BackupGauge);
+  options.playbackSpeed = g_gameConfig.GetInt(GameConfigKeys::PlaybackSpeed);
 
 	return options;
 }

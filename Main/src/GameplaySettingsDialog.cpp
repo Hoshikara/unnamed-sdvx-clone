@@ -42,6 +42,7 @@ void GameplaySettingsDialog::InitTabs()
         gameTab->settings.push_back(CreateBoolSetting(GameConfigKeys::BackupGauge, "Backup Gauge"));
         gameTab->settings.push_back(CreateBoolSetting(GameConfigKeys::RandomizeChart, "Random"));
         gameTab->settings.push_back(CreateBoolSetting(GameConfigKeys::MirrorChart, "Mirror"));
+        gameTab->settings.push_back(CreateIntSetting(GameConfigKeys::PlaybackSpeed, "Playback Speed", { 25, 400 }));
     }
     gameTab->settings.push_back(CreateBoolSetting(GameConfigKeys::DisableBackgrounds, "Hide Backgrounds"));
     gameTab->settings.push_back(CreateEnumSetting<Enum_ScoreDisplayModes>(GameConfigKeys::ScoreDisplayMode, "Score Display"));
