@@ -2168,7 +2168,7 @@ public:
 	{
 		float slamSize = object->points[1] - object->points[0];
 		float direction = Math::Sign(slamSize);
-		m_camera.AddCameraShake(slamSize);
+		m_camera.AddCameraShake(slamSize * 0.65);
 		m_slamSample->Play();
 
 		if (object->spin.type != 0)

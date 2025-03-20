@@ -120,15 +120,16 @@ void Camera::Tick(float deltaTime, class BeatmapPlayback& playback)
 
 	const TimingPoint& currentTimingPoint = playback.GetCurrentTimingPoint();
 	// Percentage of m_rollIntensity where camera rolls at its slowest rate
-	const float slowestTiltThreshold = 0.1f;
+	// const float slowestTiltThreshold = 0.1f;
 	const float rollSpeed = 4;
 	float speedLimit = MAX_ROLL_ANGLE * rollSpeed;
 	float actualRollTarget = 0;
 
 	// Lerp crit line position
 	if (m_slowTilt)
+    speedLimit /= 2.f;
 		// Roll even slower when roll is less than 1 / 10 of tilt
-		speedLimit /= fabsf(m_critLineRoll) > MAX_ROLL_ANGLE * slowestTiltThreshold ? 4.f : 8.f;
+		// speedLimit /= fabsf(m_critLineRoll) > MAX_ROLL_ANGLE * slowestTiltThreshold ? 4.f : 8.f;
 	LerpTo(m_critLineRoll, m_targetCritLineRoll, speedLimit);
 
 	if (pManualTiltEnabled)
@@ -293,7 +294,7 @@ void Camera::SetSlamAmount(uint32 index, float amount)
 	assert(index <= 1);
 	if (m_slamDuration != 0)
 	{
-		m_slamRoll[index] = amount;
+		m_slamRoll[index] = 0;
 		SetRollIgnore(index, true);
 	}
 }
